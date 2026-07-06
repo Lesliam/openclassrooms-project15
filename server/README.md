@@ -1,13 +1,43 @@
 # Coach FR — Server-Side Voice Pipeline (Home Assistant + Wyoming + Ollama)
 
-Status: v0 design + setup guide (CS-149). Nothing in this document has been
-applied to the live Home Assistant instance yet. Every change that touches
-shared infrastructure is listed in the approval section at the bottom and
-requires Lesliam's explicit go-ahead.
+Status: APPLIED 2026-07-06 (infra block executed with Lesliam's approval,
+see section 0). Originally v0 design + setup guide (CS-149); section numbers
+kept for traceability. Any FUTURE change touching shared infrastructure
+still requires explicit approval per section 4.
 
 Placeholders: `<AI_HOST_IP>` (CachyOS GPU host) and `<NAS_IP>` (Home
 Assistant NAS) are deliberately not written in this tracked file. Real
 values live in `local_notes.md` next to this file (untracked, local only).
+
+## 0. Applied status (2026-07-06)
+
+Everything below was executed and verified on 2026-07-06; commands run by
+Lesliam where root/system state was touched:
+
+- Firewall: ufw active + enabled at boot on the AI host. Default deny
+  incoming; whitelist <NAS_IP> to tcp 11434,10200,10300; tailscale0
+  allowed; LAN ssh allow rule as lockout guard (sshd inactive). Verified
+  from the NAS: ports 10200/10300 reachable. Closes the 2026-03 audit note.
+- Ollama: systemd drop-in binds <AI_HOST_IP> only (option A variant, NOT
+  0.0.0.0; ufw is the second layer). Loopback no longer listens; local
+  CLI/services get OLLAMA_HOST=<AI_HOST_IP> via ~/.zshrc and
+  ~/.config/environment.d/ollama-host.conf. Verified: NAS reaches the API.
+- Whisper language (section 2 decision): unit already ran `--language auto`
+  — no change needed, household EN pipeline behavior unchanged.
+- Piper French voice (section 3.4 question): answered — the single running
+  wyoming-piper 2.2.2 instance serves voices on demand (150 advertised);
+  fr_FR-siwis-medium downloaded and synthesis-tested. No second instance.
+- HA (additive only): second conversation agent "Coach FR" on the existing
+  Ollama integration (qwen2.5:14b, coach prompt v0, Assist control OFF,
+  max history 50); new Assist pipeline "Coach FR" (French, faster-whisper
+  FR, piper fr_FR-siwis-medium, prefer-local-commands OFF, wake word none,
+  NOT default). Existing pipelines and the household agent untouched.
+- Smoke test (3.7 step 1) PASSED: French reply in coach style; English
+  pressure test held French-only and applied the correction format
+  (explanation step skipped — recorded as a prompt-baseline data point).
+  Step 2 (browser mic) skipped: HA is served over plain HTTP and Chrome
+  blocks the microphone on insecure origins; end-to-end audio is the W2
+  ESP32 hardware test anyway.
 
 ## 1. Architecture
 
@@ -90,10 +120,9 @@ Two independent language settings matter:
      use; `auto` adds latency to every household request; a second whisper
      instance on another port pinned to `fr` isolates the two pipelines but
      costs extra VRAM).
-   - DECISION FOR LESLIAM: inspect the unit
-     (`systemctl --user cat wyoming-whisper` on the CachyOS host) and choose
-     between `--language auto` on the shared instance vs a dedicated second
-     instance for French. This document does not change anything.
+   - RESOLVED 2026-07-06: the unit already runs `--language auto` (set up
+     that way originally). French works on the shared instance; no second
+     instance, no change applied.
 
 ## 3. Step-by-step HA configuration (additive only)
 
@@ -125,9 +154,9 @@ Per https://www.home-assistant.io/integrations/ollama/ :
    history length — relevant to the long-context drift experiment, see
    `../ml/eval/eval_set_v0.md`).
 
-BLOCKER — Ollama currently binds `127.0.0.1:11434` on the CachyOS host, so
-HA on the NAS CANNOT reach it as-is. Resolution options (decision for
-Lesliam, do NOT change silently — see section 4):
+RESOLVED 2026-07-06 — option A variant applied: drop-in binds <AI_HOST_IP>
+(not 0.0.0.0) with ufw whitelisting only the NAS; see section 0. Original
+options kept for the rapport's audit trail:
 
 - Option A: set `OLLAMA_HOST=0.0.0.0` (or `<AI_HOST_IP>`) via a systemd
   drop-in for `ollama.service` and restart it. Exposes the Ollama API to the
@@ -158,12 +187,11 @@ compare at https://rhasspy.github.io/piper-samples/ before committing).
 How to add it: wyoming-piper takes `--voice <name>` and a data/download
 directory (`--data-dir` / `--download-dir`, per
 https://github.com/rhasspy/wyoming-piper) and downloads the voice model into
-that directory. Whether the single running instance can serve BOTH the
-English household voice and a French voice simultaneously (voice selected
-per-request by HA) needs a quick test; if not, run a second wyoming-piper
-instance on port 10201 with the French voice and register it as a new
-Wyoming integration. Either way this touches the shared TTS service ->
-approval required (section 4).
+that directory. ANSWERED 2026-07-06: the single running instance serves
+both voices — wyoming-piper 2.2.2 advertises the full catalog and
+downloads voices on demand; fr_FR-siwis-medium was requested via the
+Wyoming protocol and synthesized successfully with zero config change and
+zero TTS downtime. No second instance needed.
 
 ### 3.5 Create the "Coach FR" Assist pipeline (new)
 

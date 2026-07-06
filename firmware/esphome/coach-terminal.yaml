@@ -1,0 +1,162 @@
+# coach-terminal.yaml — ESPHome config SKELETON for the Coach FR voice terminal
+#
+# Target: ESP32-S3 N16R8 devkit (16 MB flash / 8 MB octal PSRAM)
+# Audio out: MAX98357 I2S amplifier + 4-ohm 3W speaker
+# Audio in:  microphone model NOT YET IDENTIFIED (CS-147) — all mic pins TODO
+# Screen:    present but model unknown — display block commented out, TODO
+#
+# STATUS: syntactically valid YAML skeleton. NOT expected to compile yet:
+# pins are placeholders, secrets are not populated, and some component keys
+# must be validated against the installed ESPHome version at first compile.
+#
+# References:
+#   https://esphome.io/components/esp32/
+#   https://esphome.io/components/psram/
+#   https://esphome.io/components/voice_assistant/
+#   https://esphome.io/components/micro_wake_word/
+#
+# NOTE on pin choices: octal PSRAM on the S3 claims GPIO35/36/37 — never
+# assign those to peripherals. All example pins below avoid them but are
+# placeholders until wiring is fixed.
+
+substitutions:
+  name: coach-terminal
+  friendly_name: Coach Terminal
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+# N16R8 = 8 MB octal PSRAM. Required for micro_wake_word model + audio buffers.
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  # Serial logging can conflict with I2S DMA timing on some setups;
+  # switch to logger over network only if audio glitches appear.
+  level: DEBUG
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "Coach-Terminal Fallback"
+    password: !secret fallback_ap_password
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# Two independent I2S buses: the S3 has two I2S peripherals, so the mic
+# (RX) and the MAX98357 (TX) each get their own bus.
+i2s_audio:
+  - id: i2s_bus_mic
+    i2s_lrclk_pin: GPIO4   # TODO(CS-147): confirm after mic model identified
+    i2s_bclk_pin: GPIO5    # TODO(CS-147): confirm after mic model identified
+  - id: i2s_bus_amp
+    i2s_lrclk_pin: GPIO18  # example pin — MAX98357 LRC; confirm final wiring
+    i2s_bclk_pin: GPIO17   # example pin — MAX98357 BCLK; confirm final wiring
+
+microphone:
+  - platform: i2s_audio
+    id: terminal_mic
+    i2s_audio_id: i2s_bus_mic
+    i2s_din_pin: GPIO6     # TODO(CS-147): confirm after mic model identified
+    adc_type: external     # TODO(CS-147): assumes I2S MEMS mic (e.g. INMP441-class)
+    pdm: false             # TODO(CS-147): set true if mic turns out to be PDM
+    channel: left          # TODO(CS-147): depends on mic L/R strapping
+    sample_rate: 16000
+    bits_per_sample: 32bit # TODO(CS-147): 32bit typical for I2S MEMS; verify
+
+speaker:
+  - platform: i2s_audio
+    id: terminal_speaker
+    i2s_audio_id: i2s_bus_amp
+    i2s_dout_pin: GPIO16   # example pin — MAX98357 DIN; confirm final wiring
+    dac_type: external
+    sample_rate: 16000
+    channel: mono          # MAX98357 is a mono amplifier
+
+# On-device wake word (KWS). Placeholder model for bring-up; the custom
+# French wake word trained in the KWS lifecycle work (dev-kws) replaces it.
+micro_wake_word:
+  id: kws
+  microphone: terminal_mic
+  models:
+    # Placeholder official model for first bring-up:
+    - model: okay_nabu
+    # Custom model goes here once trained + quantized (dev-kws pipeline).
+    # micro_wake_word accepts a manifest JSON by local path, URL, or
+    # github:// shorthand (see docs). Example:
+    # - model: https://<host-or-repo>/coach_wakeword/manifest.json  # TODO(dev-kws)
+  on_wake_word_detected:
+    - voice_assistant.start:
+
+voice_assistant:
+  id: va
+  microphone: terminal_mic
+  speaker: terminal_speaker
+  # Wake word runs on-device via micro_wake_word, not in the HA pipeline:
+  use_wake_word: false
+  noise_suppression_level: 2
+  auto_gain: 31dBFS
+  volume_multiplier: 2.0
+  on_listening:
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 0%
+        blue: 100%
+  on_tts_start:
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 100%
+        blue: 0%
+  on_end:
+    - light.turn_off: status_led
+  on_error:
+    - light.turn_on:
+        id: status_led
+        red: 100%
+        green: 0%
+        blue: 0%
+
+# Status LED placeholder — many S3 devkits have an onboard WS2812 on GPIO48
+# (some board revisions use GPIO38). TODO: confirm on the actual board.
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO48            # TODO: confirm onboard RGB LED pin (48 vs 38)
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    default_transition_length: 0s
+
+# Screen: a small display is physically present but its model/driver/pins
+# are unknown. Uncomment and fill in once identified.
+# display:
+#   - platform: TODO       # TODO: identify screen model (SSD1306? ST7789? ...)
+#     # pins / bus (i2c or spi): TODO
+#     lambda: |-
+#       it.print(0, 0, id(some_font), "Coach FR");
+
+switch:
+  - platform: template
+    name: "Mute"
+    id: mute_switch
+    optimistic: true
+    # TODO: wire to micro_wake_word stop/start so mute actually disables KWS

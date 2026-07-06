@@ -2,7 +2,8 @@
 #
 # Target: ESP32-S3 N16R8 devkit (16 MB flash / 8 MB octal PSRAM)
 # Audio out: MAX98357 I2S amplifier + 4-ohm 3W speaker
-# Audio in:  microphone model NOT YET IDENTIFIED (CS-147) — all mic pins TODO
+# Audio in:  INMP441 I2S MEMS microphone (confirmed 2026-07-06, CS-147)
+#            Wiring: VDD->3V3, GND->GND, L/R->GND (left channel), WS/SCK/SD below
 # Screen:    present but model unknown — display block commented out, TODO
 #
 # STATUS: syntactically valid YAML skeleton. NOT expected to compile yet:
@@ -63,8 +64,8 @@ ota:
 # (RX) and the MAX98357 (TX) each get their own bus.
 i2s_audio:
   - id: i2s_bus_mic
-    i2s_lrclk_pin: GPIO4   # TODO(CS-147): confirm after mic model identified
-    i2s_bclk_pin: GPIO5    # TODO(CS-147): confirm after mic model identified
+    i2s_lrclk_pin: GPIO4   # INMP441 WS  (proposed free pin; adjust at wiring)
+    i2s_bclk_pin: GPIO5    # INMP441 SCK (proposed free pin; adjust at wiring)
   - id: i2s_bus_amp
     i2s_lrclk_pin: GPIO18  # example pin — MAX98357 LRC; confirm final wiring
     i2s_bclk_pin: GPIO17   # example pin — MAX98357 BCLK; confirm final wiring
@@ -73,12 +74,12 @@ microphone:
   - platform: i2s_audio
     id: terminal_mic
     i2s_audio_id: i2s_bus_mic
-    i2s_din_pin: GPIO6     # TODO(CS-147): confirm after mic model identified
-    adc_type: external     # TODO(CS-147): assumes I2S MEMS mic (e.g. INMP441-class)
-    pdm: false             # TODO(CS-147): set true if mic turns out to be PDM
-    channel: left          # TODO(CS-147): depends on mic L/R strapping
+    i2s_din_pin: GPIO6     # INMP441 SD (proposed free pin; adjust at wiring)
+    adc_type: external     # INMP441 = I2S MEMS mic, confirmed
+    pdm: false             # INMP441 is standard I2S, not PDM
+    channel: left          # requires L/R pin tied to GND on the module
     sample_rate: 16000
-    bits_per_sample: 32bit # TODO(CS-147): 32bit typical for I2S MEMS; verify
+    bits_per_sample: 32bit # INMP441: 24-bit data in 32-bit I2S frame
 
 speaker:
   - platform: i2s_audio

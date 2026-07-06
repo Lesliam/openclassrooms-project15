@@ -5,6 +5,10 @@ applied to the live Home Assistant instance yet. Every change that touches
 shared infrastructure is listed in the approval section at the bottom and
 requires Lesliam's explicit go-ahead.
 
+Placeholders: `<AI_HOST_IP>` (CachyOS GPU host) and `<NAS_IP>` (Home
+Assistant NAS) are deliberately not written in this tracked file. Real
+values live in `local_notes.md` next to this file (untracked, local only).
+
 ## 1. Architecture
 
 The Coach FR pipeline reuses the existing household voice infrastructure
@@ -17,13 +21,13 @@ The existing English household pipeline is not modified.
 |  ESP32-S3 N16R8 terminal  |
 |  (ESPHome satellite)      |
 |  - micro_wake_word (KWS)  |
-|  - I2S mic (TODO CS-147)  |
+|  - INMP441 I2S mic        |
 |  - MAX98357 + speaker     |
 +------------+--------------+
              | ESPHome native API (voice_assistant protocol)
              v
 +---------------------------+
-|  Home Assistant           |   Synology NAS, LAN 192.168.1.100
+|  Home Assistant           |   NAS, LAN <NAS_IP>
 |  Assist pipeline:         |
 |  "Coach FR" (NEW,         |
 |   additive — existing     |
@@ -43,7 +47,7 @@ The existing English household pipeline is not modified.
 | needed)| | prompt  | | see    |
 |        | | :11434  | | 3.4)   |
 +--------+ +---------+ +--------+
-     all three on CachyOS host, LAN 192.168.1.37
+     all three on CachyOS host, LAN <AI_HOST_IP>
 ```
 
 Round trip: wake word detected on-device -> ESP32 streams mic audio to HA ->
@@ -93,24 +97,24 @@ Two independent language settings matter:
 
 ## 3. Step-by-step HA configuration (additive only)
 
-All steps below are performed in the HA UI on the Synology instance. None of
+All steps below are performed in the HA UI on the NAS instance. None of
 them modify the existing pipeline; they only add new entries.
 
 ### 3.1 Prerequisite check — Wyoming integrations already present
 
 Settings -> Devices & Services: the Wyoming integrations for Whisper
-(192.168.1.37:10300) and Piper (192.168.1.37:10200) should already exist from
+(<AI_HOST_IP>:10300) and Piper (<AI_HOST_IP>:10200) should already exist from
 the household setup. Do not touch them. If the French voice ends up served by
 a second Piper/Whisper instance on new ports (see 3.4 and section 2), those
 would be ADDED as new Wyoming entries (Settings -> Devices & Services ->
-Add Integration -> Wyoming Protocol -> host 192.168.1.37, port NNNNN).
+Add Integration -> Wyoming Protocol -> host <AI_HOST_IP>, port NNNNN).
 
 ### 3.2 Install the Ollama integration (new)
 
 Per https://www.home-assistant.io/integrations/ollama/ :
 
 1. Settings -> Devices & Services -> Add Integration -> "Ollama".
-2. URL: `http://192.168.1.37:11434`.
+2. URL: `http://<AI_HOST_IP>:11434`.
 3. Model: `qwen2.5:14b` (already pulled on the host).
 4. In the integration options, paste the coach system prompt from
    `coach_system_prompt_v0.md` into the "Instructions" (prompt template)
@@ -125,13 +129,13 @@ BLOCKER — Ollama currently binds `127.0.0.1:11434` on the CachyOS host, so
 HA on the NAS CANNOT reach it as-is. Resolution options (decision for
 Lesliam, do NOT change silently — see section 4):
 
-- Option A: set `OLLAMA_HOST=0.0.0.0` (or `192.168.1.37`) via a systemd
+- Option A: set `OLLAMA_HOST=0.0.0.0` (or `<AI_HOST_IP>`) via a systemd
   drop-in for `ollama.service` and restart it. Exposes the Ollama API to the
   whole LAN (no auth in Ollama) — acceptable on a trusted home LAN, but note
   the CachyOS host currently has no firewall configured.
 - Option B: keep Ollama on loopback and add a reverse proxy (nginx/caddy)
-  or socat forward on 192.168.1.37 that only accepts connections from
-  192.168.1.100 (the NAS). More setup, tighter exposure.
+  or socat forward on <AI_HOST_IP> that only accepts connections from
+  <NAS_IP> (the NAS). More setup, tighter exposure.
 
 ### 3.3 (If needed) Second Whisper instance for French
 
@@ -179,8 +183,9 @@ Per https://www.home-assistant.io/voice_control/voice_remote_local_assistant/ :
 
 ### 3.6 Wire the ESP32 satellite
 
-Flash `../firmware/esphome/coach-terminal.yaml` (skeleton, CS-147 pins
-pending), adopt the device in HA (ESPHome integration auto-discovers it),
+Flash `../firmware/esphome/coach-terminal.yaml` (skeleton; INMP441 mic
+confirmed, proposed pins in the YAML), adopt the device in HA (ESPHome
+integration auto-discovers it),
 then in the device page set its assistant/pipeline to `Coach FR`.
 
 ### 3.7 Smoke test
@@ -198,7 +203,7 @@ voice). NONE of it is done by this ticket; each line is a separate approval.
 
 | # | Change | Shared component touched | Risk if done carelessly |
 |---|--------|--------------------------|-------------------------|
-| 1 | Expose Ollama to LAN (`OLLAMA_HOST` drop-in + restart) OR add a proxy on 192.168.1.37 | `ollama.service` on CachyOS | Unauthenticated LLM API visible to whole LAN; no firewall currently configured on the host |
+| 1 | Expose Ollama to LAN (`OLLAMA_HOST` drop-in + restart) OR add a proxy on <AI_HOST_IP> | `ollama.service` on CachyOS | Unauthenticated LLM API visible to whole LAN; no firewall currently configured on the host |
 | 2 | Whisper language strategy: change `--language` on the shared instance to `auto`, or spawn a second FR instance | `wyoming-whisper` systemd user unit / GPU VRAM budget (~4 GB already resident) | `auto` slows the household EN pipeline; second instance eats VRAM needed by fine-tune runs (gpu-solo conflicts) |
 | 3 | Add French voice to Piper (same instance) or spawn second wyoming-piper on :10201 | `wyoming-piper` systemd user unit | Restarting piper interrupts household TTS momentarily; misconfig could change the household voice |
 | 4 | New Wyoming integration entries + new Assist pipeline in HA | HA config on the NAS (additive, but same instance the household depends on) | Low — additive; main risk is accidentally editing the existing pipeline instead of adding one |

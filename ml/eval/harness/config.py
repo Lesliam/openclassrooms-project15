@@ -10,14 +10,29 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import asdict, dataclass
+from urllib.parse import urlsplit
 
 from . import constants
 from .ollama_client import DecodeOptions
+
+_REDACTED_HOST = "REDACTED"
 
 
 def sha256_text(text: str) -> str:
     """SHA-256 hex digest of a UTF-8 string."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _redact_host(base_url: str) -> str:
+    """Mask the host in an Ollama base URL, keeping scheme and port.
+
+    The persisted run config can be committed to a public repository, so the
+    deployment address must not leak; the port is kept for reproducibility.
+    """
+    parts = urlsplit(base_url)
+    scheme = parts.scheme or "http"
+    port = f":{parts.port}" if parts.port is not None else ""
+    return f"{scheme}://{_REDACTED_HOST}{port}"
 
 
 def load_system_prompt() -> str:
@@ -58,6 +73,9 @@ class RunConfig:
     def to_dict(self) -> dict:
         data = asdict(self)
         data["decode"] = self.decode.as_dict()
+        # Persisted config may be committed (public mirror), so mask the
+        # deployment host, keeping only scheme + port for reproducibility.
+        data["ollama_base_url"] = _redact_host(self.ollama_base_url)
         return data
 
 

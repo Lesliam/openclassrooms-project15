@@ -16,5 +16,5 @@
   "seed_base": 42,
   "system_prompt_sha256": "50480f0fea969ca074ecac3809fa99445b2421d06d0de3f0f7ed0579a84746ab",
   "eval_set_sha256": "a743af252407034571f29511a661ea6d36fb15104e2c21c6324bb6b4ce85fc10",
-  "ollama_base_url": "http://192.168.1.37:11434"
+  "ollama_base_url": "http://REDACTED:11434"
 }

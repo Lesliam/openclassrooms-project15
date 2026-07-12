@@ -40,9 +40,14 @@ python -m venv .venv
 ./.venv/bin/python -m pip install -r requirements.txt
 ```
 
-Ollama must be reachable at `http://192.168.1.37:11434` (this host's LAN IP;
-loopback is dead by design here) with `qwen2.5:14b` present. The judge model
-`mistral-small3.2` is only needed for full runs with `--judge`.
+Point the harness at Ollama via the environment (the address is not
+hardcoded, to keep deployment topology out of version control): set
+`OLLAMA_BASE_URL` (a full URL) or `OLLAMA_HOST` (host, expanded to
+`http://<host>:11434`); it defaults to `http://127.0.0.1:11434`. On this
+deployment loopback is disabled by design, so `OLLAMA_HOST` is exported to
+the host's LAN address in the shell environment. The server must have
+`qwen2.5:14b` present. The judge model `mistral-small3.2` is only needed for
+full runs with `--judge`.
 
 ## Run
 

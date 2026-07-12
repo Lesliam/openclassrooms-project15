@@ -7,14 +7,40 @@ flagged as v0 guesses that need Lesliam's review (eval_set_v0 section 5).
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+from urllib.parse import urlsplit
+
+# Default Ollama port when the environment specifies only a host.
+_DEFAULT_OLLAMA_PORT = 11434
+
+
+def _resolve_ollama_base_url() -> str:
+    """Resolve the Ollama base URL from the environment.
+
+    The real host is deployment-specific (and on this deployment loopback is
+    dead by design, so the LAN IP must be used). To keep deployment topology
+    out of version control, the address is read from the environment rather
+    than hardcoded: ``OLLAMA_BASE_URL`` (full URL) takes precedence, else
+    ``OLLAMA_HOST`` (host, as exported by the Ollama CLI env) is expanded to a
+    URL, else a localhost default. Set one of these before running.
+    """
+    explicit = os.environ.get("OLLAMA_BASE_URL")
+    if explicit:
+        return explicit.rstrip("/")
+    host = os.environ.get("OLLAMA_HOST", "127.0.0.1")
+    if "://" not in host:
+        host = f"http://{host}"
+    if urlsplit(host).port is None:
+        host = f"{host}:{_DEFAULT_OLLAMA_PORT}"
+    return host.rstrip("/")
+
 
 # --- Network / models ------------------------------------------------------
 
-# Ollama base URL. This host's LAN IP is used on purpose: loopback
-# (127.0.0.1) is dead by design on this deployment. Do not switch to
-# localhost.
-OLLAMA_BASE_URL = "http://192.168.1.37:11434"
+# Ollama base URL — resolved from the environment (never hardcode the
+# deployment's address; see _resolve_ollama_base_url).
+OLLAMA_BASE_URL = _resolve_ollama_base_url()
 OLLAMA_CHAT_PATH = "/api/chat"
 OLLAMA_TAGS_PATH = "/api/tags"
 

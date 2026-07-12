@@ -251,6 +251,33 @@ class BaselineRunner:
         return results
 
 
+def available_filler_depth() -> int:
+    """Number of filler turns available for the deep drift probe."""
+    return len(FILLER_SCRIPT)
+
+
+def ensure_drift_depth_available(drift_depth: int) -> None:
+    """Raise if the requested drift depth exceeds the available filler.
+
+    Prevents a silently-truncated deep probe (fix S4): an over-large
+    ``--drift-depth`` would otherwise slice past the end of FILLER_SCRIPT and
+    quietly land the deep probe shallower than requested.
+    """
+    available = available_filler_depth()
+    if drift_depth > available:
+        raise ValueError(
+            f"drift_depth {drift_depth} exceeds available filler turns "
+            f"({available}); add more FILLER_SCRIPT lines or lower --drift-depth"
+        )
+
+
+def _write_scores(path: Path, results: list[TurnResult]) -> None:
+    path.write_text(
+        json.dumps([asdict(r) for r in results], indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
 def run_all(
     client: OllamaClient,
     config: RunConfig,
@@ -259,7 +286,14 @@ def run_all(
     dialogues: tuple[Dialogue, ...] = ALL_DIALOGUES,
     progress: Optional[ProgressCallback] = None,
 ) -> list[TurnResult]:
-    """Run every dialogue, persist config + transcripts + scores, return results."""
+    """Run every dialogue, persist config + transcripts + scores, return results.
+
+    Scores are snapshotted to ``scores.partial.json`` after each dialogue so a
+    mid-run failure (a full run is hours) stays recoverable; on full success
+    the complete ``scores.json`` is written and the partial snapshot removed.
+    """
+    ensure_drift_depth_available(config.drift_depth)
+
     output_dir.mkdir(parents=True, exist_ok=True)
     transcripts_dir = output_dir / "transcripts"
     transcripts_dir.mkdir(exist_ok=True)
@@ -270,6 +304,7 @@ def run_all(
     )
 
     runner = BaselineRunner(client, config, base_decode, progress)
+    partial_path = output_dir / "scores.partial.json"
     all_results: list[TurnResult] = []
     for dialogue in dialogues:
         results = runner.run_dialogue(dialogue)
@@ -278,9 +313,10 @@ def run_all(
             json.dumps([asdict(r) for r in results], indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
+        # Incremental snapshot: leaves a recoverable file if a later dialogue
+        # fails before the run completes.
+        _write_scores(partial_path, all_results)
 
-    (output_dir / "scores.json").write_text(
-        json.dumps([asdict(r) for r in all_results], indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    _write_scores(output_dir / "scores.json", all_results)
+    partial_path.unlink(missing_ok=True)
     return all_results

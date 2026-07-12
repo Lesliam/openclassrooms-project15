@@ -61,13 +61,16 @@ scorers only — finishes in a few minutes):
 Full baseline run:
 
 ```bash
-./.venv/bin/python -m harness --full --repetitions 5 --drift-depth 18
-# add --judge to enable the LLM judge (judge-model choice is an open point,
-# eval_set_v0 section 5)
+./.venv/bin/python -m harness --full --repetitions 5 --drift-depth 25
 ```
 
-Useful flags: `--repetitions N`, `--drift-depth N`, `--judge-model NAME`,
-`--run-id NAME`.
+The judge is not wired yet (the judge model is a pending Lesliam decision,
+eval_set_v0 section 5); passing `--judge` is rejected loudly so a persisted
+config can never claim the judge ran. `--drift-depth` may not exceed the
+number of `FILLER_SCRIPT` lines — the runner raises rather than silently
+truncating the deep probe.
+
+Useful flags: `--repetitions N`, `--drift-depth N`, `--run-id NAME`.
 
 ## Outputs and how they map to `eval_set_v0.md`
 
@@ -79,8 +82,10 @@ Each run writes `runs/<run-id>/`:
   per-turn deterministic scores.
 - `scores.json` — the flat per-turn score records (input to the report).
 - `report.md` — aggregated metrics:
-  - **D1** correction-format compliance rate + false-positive rate
-    (eval_set_v0 section 1, D1).
+  - **D1** deterministic pre-check compliance (4-part marker presence +
+    brevity; part order and the "exactly one explanation sentence" rule are
+    NOT verified here — those belong to the judge, eval_set_v0 section 2) +
+    false-positive rate.
   - **D2** French-persistence rate + mean French-token fraction
     (section 1, D2).
   - **D3** drift deltas per behavior = compliance(shallow) − compliance(deep)
@@ -103,13 +108,30 @@ fail-fast precondition of every run:
 ## Scoring model
 
 - Deterministic scorers (`scorers.py`) own the cheap pre-checks: D1 markers
-  (restatement, correction, repeat request, brevity), D2 per-sentence
-  language ID (`langdetect`, seeded) with a hard CJK-fail rule and a soft
-  French-token fraction, and sentence-count brevity.
-- The LLM judge (`judge.py`) owns the structural 4-part ordered check and the
-  semantic false-positive check (eval_set_v0 section 2). It is wired and
-  unit-callable but disabled in the dry-run, pending Lesliam's judge-model
-  decision (section 5).
+  (restatement, correction, repeat request, brevity) — this verifies 4-part
+  marker PRESENCE and brevity only, NOT part order or the "exactly one
+  explanation sentence" rule; D2 per-sentence language ID (`langdetect`,
+  seeded) with a hard CJK-fail rule and a soft French-token fraction; and
+  sentence-count brevity.
+- The LLM judge (`judge.py`) owns the structural 4-part ORDERED check and the
+  semantic false-positive check (eval_set_v0 section 2). It is importable and
+  unit-callable but NOT wired into any run path yet, pending Lesliam's
+  judge-model decision (section 5); `--judge` is rejected until it is.
+
+## Known v0 limitations
+
+- **N1 — restatement overlap is asymmetric.** The D1 restatement pre-check
+  measures the fraction of the learner sentence's tokens that appear in a
+  quoted span (learner-to-span direction). A very long quoted span that
+  contains the learner sentence plus much more still counts as a restatement.
+  This is intentional for v0 (the judge owns the precise structural check);
+  flagged for review with the 60% threshold (eval_set_v0 section 5).
+- **N2 — D2 has no proper-noun exception.** The spec allows proper nouns and
+  unavoidable technical terms in an otherwise-French reply. The deterministic
+  D2 check runs `langdetect` per sentence and does not special-case such
+  tokens, so a sentence dominated by a proper noun could be misclassified.
+  The soft French-token fraction is reported alongside the hard pass/fail to
+  make this visible; the judge is the tie-breaker for ambiguous sentences.
 
 ## Reproducibility
 

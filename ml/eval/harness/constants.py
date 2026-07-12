@@ -95,9 +95,11 @@ DEFAULT_REPETITIONS = 5
 DRYRUN_REPETITIONS = 2
 
 # Drift depth = number of scripted filler turns injected before the deep
-# probe. Full run pads to a deep conversation; dry-run uses a reduced depth
-# so the dry-run finishes in minutes.
-DEFAULT_DRIFT_DEPTH = 18
+# probe. Full run pads to a deep conversation so the deep probe lands past
+# turn ~25 (eval_set_v0 section 3); dry-run uses a reduced depth so the
+# dry-run finishes in minutes. The requested depth must not exceed the number
+# of available FILLER_SCRIPT lines (the runner raises instead of truncating).
+DEFAULT_DRIFT_DEPTH = 25
 DRYRUN_DRIFT_DEPTH = 7
 
 # Number of warm-up filler turns sent before the SHALLOW probe so the probe

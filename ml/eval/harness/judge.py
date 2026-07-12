@@ -79,6 +79,33 @@ def build_judge_prompt(
     )
 
 
+_TRUE_STRINGS = frozenset({"true", "1", "yes"})
+_FALSE_STRINGS = frozenset({"false", "0", "no"})
+
+
+def _coerce_pass(value: object) -> bool:
+    """Coerce a judge 'pass' value to bool without the ``bool("false") == True`` trap.
+
+    Accepts a JSON boolean, the ints 0/1, or the strings true/false/1/0/yes/no
+    (case-insensitive). Anything else raises ``JudgeError`` rather than
+    silently mis-grading.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):  # bool already handled above
+        if value in (0, 1):
+            return value == 1
+        raise JudgeError(f"Judge 'pass' int out of range: {value!r}")
+    if isinstance(value, str):
+        token = value.strip().lower()
+        if token in _TRUE_STRINGS:
+            return True
+        if token in _FALSE_STRINGS:
+            return False
+        raise JudgeError(f"Judge 'pass' string not truthy/falsy: {value!r}")
+    raise JudgeError(f"Judge 'pass' has unsupported type: {value!r}")
+
+
 def parse_judge_output(raw: str) -> JudgeVerdict:
     """Parse the judge's JSON verdict, tolerating surrounding prose."""
     match = _JSON_OBJECT.search(raw)
@@ -91,7 +118,7 @@ def parse_judge_output(raw: str) -> JudgeVerdict:
     if "pass" not in data:
         raise JudgeError(f"Judge output missing 'pass' key: {data!r}")
     return JudgeVerdict(
-        passed=bool(data["pass"]),
+        passed=_coerce_pass(data["pass"]),
         missing_or_violating=str(data.get("missing_or_violating", "")),
         raw_output=raw,
     )

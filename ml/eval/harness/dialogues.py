@@ -428,5 +428,12 @@ FILLER_SCRIPT: tuple[str, ...] = (
     "Je prépare aussi une simulation de soutenance pour m'entraîner.",
     "Je documente chaque choix technique dans un rapport de projet.",
     "Je veux présenter des mesures claires pendant la soutenance.",
+    "J'explique aussi les compromis entre la latence et la précision.",
+    "Le budget de mémoire du microcontrôleur est très limité.",
+    "Je teste le terminal dans une pièce avec du bruit de fond.",
+    "Je note les faux déclenchements pour améliorer le modèle.",
+    "Je garde une version stable comme référence de comparaison.",
+    "Je sauvegarde les points de contrôle du modèle régulièrement.",
+    "Je vérifie que la voix de synthèse reste naturelle et claire.",
     "Voilà, tu connais maintenant le contexte de mon projet.",
 )

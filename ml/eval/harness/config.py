@@ -28,8 +28,14 @@ def _redact_host(base_url: str) -> str:
 
     The persisted run config can be committed to a public repository, so the
     deployment address must not leak; the port is kept for reproducibility.
+
+    A missing scheme is defaulted to ``http://`` before parsing, because
+    ``urlsplit`` cannot recover the port from a bare ``host:port`` (it reads
+    the host as the scheme). This keeps the port for schemeless inputs while
+    preserving the no-leak invariant (fix F1).
     """
-    parts = urlsplit(base_url)
+    candidate = base_url if "://" in base_url else f"http://{base_url}"
+    parts = urlsplit(candidate)
     scheme = parts.scheme or "http"
     port = f":{parts.port}" if parts.port is not None else ""
     return f"{scheme}://{_REDACTED_HOST}{port}"

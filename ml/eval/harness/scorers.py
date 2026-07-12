@@ -94,17 +94,33 @@ class D1Score:
         return asdict(self)
 
 
-def score_d1(reply: str, learner_text: str, brevity_max: int) -> D1Score:
-    """Deterministic pre-check for the 4-part correction format."""
-    quoted = _quoted_spans(reply)
+def _restatement_present(reply: str, learner_text: str) -> bool:
+    """True if the reply restates the learner sentence (marker or quoted overlap).
+
+    Shared by the D1 pre-check and the false-positive detector so both use the
+    same restatement rule.
+    """
     overlap_hit = any(
         _token_overlap(span, learner_text) >= constants.D1_RESTATEMENT_OVERLAP_THRESHOLD
-        for span in quoted
+        for span in _quoted_spans(reply)
     )
-    has_restatement = bool(_RESTATEMENT_MARKER.search(reply)) or overlap_hit
-    # A correction is present if the explicit marker appears, or if there are
-    # at least two distinct quoted spans (restated vs corrected).
-    has_correction = bool(_CORRECTION_MARKER.search(reply)) or len(set(quoted)) >= 2
+    return bool(_RESTATEMENT_MARKER.search(reply)) or overlap_hit
+
+
+def _correction_present(reply: str) -> bool:
+    """True if the reply supplies a corrected version (marker or two quoted spans).
+
+    Shared by the D1 pre-check and the false-positive detector so the
+    false-positive rate is not biased low by a narrower rule (fix S6).
+    """
+    quoted = _quoted_spans(reply)
+    return bool(_CORRECTION_MARKER.search(reply)) or len(set(quoted)) >= 2
+
+
+def score_d1(reply: str, learner_text: str, brevity_max: int) -> D1Score:
+    """Deterministic pre-check for the 4-part correction format."""
+    has_restatement = _restatement_present(reply, learner_text)
+    has_correction = _correction_present(reply)
     has_repeat_request = bool(_REPEAT_MARKER.search(reply))
     sentence_count = count_sentences(reply)
     within_length = sentence_count <= brevity_max
@@ -122,15 +138,13 @@ def score_d1(reply: str, learner_text: str, brevity_max: int) -> D1Score:
 
 
 def d1_correction_emitted(reply: str, learner_text: str) -> bool:
-    """Whether the reply appears to emit a correction (for false-positive check)."""
-    quoted = _quoted_spans(reply)
-    overlap_hit = any(
-        _token_overlap(span, learner_text) >= constants.D1_RESTATEMENT_OVERLAP_THRESHOLD
-        for span in quoted
-    )
-    restatement = bool(_RESTATEMENT_MARKER.search(reply)) or overlap_hit
-    correction = bool(_CORRECTION_MARKER.search(reply))
-    return restatement and correction
+    """Whether the reply appears to emit a correction (for false-positive check).
+
+    Uses the SAME restatement and correction rules as ``score_d1`` (fix S6):
+    a correction is considered emitted when the reply both restates the
+    learner sentence and supplies a corrected version.
+    """
+    return _restatement_present(reply, learner_text) and _correction_present(reply)
 
 
 # --- D2: French-persistence deterministic check -----------------------------

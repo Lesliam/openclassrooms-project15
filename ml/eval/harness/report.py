@@ -162,7 +162,9 @@ def render_markdown(config: dict, records: list[dict]) -> str:
     lines.append("## Headline metrics")
     lines.append("")
     lines.append(
-        f"- D1 correction-format compliance rate: "
+        "- D1 deterministic pre-check compliance (4-part marker PRESENCE + "
+        "brevity; part ORDER and the 'exactly one explanation sentence' rule "
+        f"are NOT verified here - judge pending): "
         f"{_fmt_rate(headline['d1_compliance_rate'])}"
     )
     lines.append(
@@ -176,6 +178,12 @@ def render_markdown(config: dict, records: list[dict]) -> str:
     lines.append(
         "- D2 mean French-token fraction: "
         + ("n/a" if frac is None else f"{frac:.3f}")
+    )
+    lines.append("")
+    lines.append(
+        "> The `D1` column below is the same deterministic pre-check "
+        "(presence + brevity), not the spec's full D1 rate; order and "
+        "single-explanation checks are the judge's job (eval_set_v0 section 2)."
     )
     lines.append("")
 

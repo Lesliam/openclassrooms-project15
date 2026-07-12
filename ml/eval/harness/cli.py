@@ -2,11 +2,11 @@
 
 Examples:
     python -m harness --dry-run
-    python -m harness --full --repetitions 5 --drift-depth 18 --judge
+    python -m harness --full --repetitions 5 --drift-depth 25
 
-The dry-run uses reduced repetitions and drift depth, keeps the judge
-disabled, and hits Ollama for real to produce a report under
-``ml/eval/runs/<run-id>/``.
+The dry-run uses reduced repetitions and drift depth and hits Ollama for real
+to produce a report under ``ml/eval/runs/<run-id>/``. The judge is not wired
+yet (eval_set_v0 section 5); passing --judge is rejected loudly.
 """
 
 from __future__ import annotations
@@ -19,8 +19,18 @@ from . import constants
 from .config import build_run_config
 from .ollama_client import DecodeOptions, Message, OllamaClient, OllamaError
 from .report import build_report
-from .runner import run_all
+from .runner import ensure_drift_depth_available, run_all
 from .spec_guard import verify_dialogues_match_spec
+
+# The judge model is a pending Lesliam decision (eval_set_v0 section 5) and no
+# code path calls judge.py yet. --judge must fail loudly so a persisted config
+# can never claim the judge ran when it did not (fix B1).
+_JUDGE_NOT_WIRED_MESSAGE = (
+    "--judge is not wired yet: the judge model is a pending decision "
+    "(eval_set_v0 section 5) and judge scoring is a separate future ticket. "
+    "config.json must never claim the judge ran, so this flag is rejected. "
+    "Re-run without --judge."
+)
 
 _HEALTH_CHECK_PROMPT = "Reponds simplement: bonjour."
 _HEALTH_CHECK_MAX_TOKENS_CTX = 512
@@ -59,12 +69,12 @@ def _build_parser() -> argparse.ArgumentParser:
         dest="judge",
         action="store_true",
         default=False,
-        help="enable the LLM judge (full runs only; off in dry-run)",
+        help="REJECTED: judge scoring is not wired yet (eval_set_v0 section 5)",
     )
     parser.add_argument(
         "--judge-model",
         default=constants.DEFAULT_JUDGE_MODEL,
-        help="judge model name",
+        help="judge model name recorded in config (judge not yet wired)",
     )
     parser.add_argument(
         "--run-id",
@@ -103,6 +113,9 @@ def _health_check(client: OllamaClient) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
 
+    if args.judge:
+        raise NotImplementedError(_JUDGE_NOT_WIRED_MESSAGE)
+
     is_full = args.full
     mode = "baseline" if is_full else "dryrun"
     repetitions = args.repetitions or (
@@ -111,8 +124,16 @@ def main(argv: list[str] | None = None) -> int:
     drift_depth = args.drift_depth or (
         constants.DEFAULT_DRIFT_DEPTH if is_full else constants.DRYRUN_DRIFT_DEPTH
     )
-    judge_enabled = args.judge and is_full  # never in dry-run
+    # No judge path exists yet (see B1 gate above); the persisted config must
+    # reflect that the judge did not run.
+    judge_enabled = False
     run_id = args.run_id or _default_run_id(mode)
+
+    try:
+        ensure_drift_depth_available(drift_depth)
+    except ValueError as exc:
+        print(f"[harness] invalid --drift-depth: {exc}", file=sys.stderr)
+        return 4
 
     base_decode = DecodeOptions(
         temperature=constants.DECODE_TEMPERATURE,

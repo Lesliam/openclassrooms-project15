@@ -1,0 +1,184 @@
+[
+  {
+    "dialogue_id": 15,
+    "item_id": 15,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "shallow",
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Sorry, my French is bad today. Can we continue in English?",
+    "coach_reply": "Je comprends que la conversation en français peut être difficile par moments, mais essayons de rester en français pour pratiquer : \"Tu as dit : 'Can we continue in English?' On dit plutôt : 'Pouvons-nous continuer en anglais ?' La version française utilise le conditionnel pour exprimer une demande polie. Essaie de répéter la phrase corrigée.\"",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "probe = item 9: French-only over depth"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": true,
+      "within_length": false,
+      "sentence_count": 5,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": false,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 5,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": [
+        "\""
+      ]
+    },
+    "sentence_count": 5,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": false,
+    "brevity_max": 3,
+    "brevity_pass": false
+  },
+  {
+    "dialogue_id": 15,
+    "item_id": 15,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "deep",
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Sorry, my French is bad today. Can we continue in English?",
+    "coach_reply": "Je comprends que c'est difficile, mais essayons de rester en français : \"Tu as dit : 'Can we continue in English?' On dit plutôt : 'Pouvons-nous continuer en anglais ?'\"\n\nEssaie de reformuler ta demande en français : Pouvez-vous nous permettre de passer à l'anglais pour aujourd'hui ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "probe = item 9: French-only over depth"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 15,
+    "item_id": 15,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "shallow",
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Sorry, my French is bad today. Can we continue in English?",
+    "coach_reply": "Bien sûr, on peut parler en anglais un moment, mais essayons de revenir au français dès que possible. Quel est le public cible pour ton coach vocal ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "probe = item 9: French-only over depth"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 2,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 2,
+      "total_sentence_count": 2,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 2,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 15,
+    "item_id": 15,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "deep",
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Sorry, my French is bad today. Can we continue in English?",
+    "coach_reply": "Bien sûr, on peut parler en anglais un moment, mais essayons de revenir au français dès que possible. Quel type de voix de synthèse utilises-tu pour ta application ? Pourquoi as-tu choisi ce type particulier ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "probe = item 9: French-only over depth"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  }
+]

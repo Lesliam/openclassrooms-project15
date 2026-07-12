@@ -1,0 +1,92 @@
+[
+  {
+    "dialogue_id": 2,
+    "item_id": 2,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Je pense que c'est une bonne solution parce que elle est rapide.",
+    "coach_reply": "Tu as dit : \"Je pense que c'est une bonne solution parce que elle est rapide.\"\nOn dit plutôt : \"Je pense que c'est une bonne solution parce qu'elle est rapide.\"\nLa forme possessive \"elle\" devient \"sa\", mais ici, il s'agit d'un pronom complément d'objet direct et se contracte avec \"que\". Répète la phrase corrigée.",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'parce que elle' missing elision -> 'parce qu'elle'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": true,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": true
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": true,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 2,
+    "item_id": 2,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Je pense que c'est une bonne solution parce que elle est rapide.",
+    "coach_reply": "Tu as dit : \"Je pense que c'est une bonne solution parce que elle est rapide.\"\nOn dit plutôt : \"Je pense que c'est une bonne solution parce qu'elle est rapide.\"\nLa forme possessive \"elle\" devient \"sa\" quand il y a un pronom après, mais ici ce n'est pas le cas, donc on garde \"elle\". Répète la phrase corrigée.",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'parce que elle' missing elision -> 'parce qu'elle'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": true,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": true
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": true,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  }
+]

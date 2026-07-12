@@ -1,0 +1,94 @@
+[
+  {
+    "dialogue_id": 13,
+    "item_id": 13,
+    "group": "B",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "I will say it in English first and then translate: the wake word model runs on the device. Alors: le modèle de mot de réveil tourne sur l'appareil.",
+    "coach_reply": "Tu as dit : \"le modèle de mot de réveil tourne sur l'appareil.\"\nOn dit plutôt : \"Le modèle de détection du mot de commande s'exécute sur l'appareil.\"\n\nExplique-moi pourquoi il est important que ce modèle fonctionne localement sur l'appareil.",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "French-only reply; ideally engages with the French half"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 13,
+    "item_id": 13,
+    "group": "B",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "I will say it in English first and then translate: the wake word model runs on the device. Alors: le modèle de mot de réveil tourne sur l'appareil.",
+    "coach_reply": "Tu as dit : \"le modèle de mot de réveil tourne sur l'appareil.\"\nOn dit plutôt : \"Le modèle de détection du mot de réveil s'exécute sur l'appareil.\"\n\nEssaie de reformuler cette phrase en utilisant \"s'exécuter\" au lieu de \"tourner.\"",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "French-only reply; ideally engages with the French half"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": false,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": false,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": [
+        "\""
+      ]
+    },
+    "sentence_count": 4,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": false,
+    "brevity_max": 3,
+    "brevity_pass": false
+  }
+]

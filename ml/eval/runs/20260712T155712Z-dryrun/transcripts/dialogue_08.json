@@ -1,0 +1,92 @@
+[
+  {
+    "dialogue_id": 8,
+    "item_id": 8,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Bonjour, je m'appelle Lesliam et je travaille sur un coach vocal pour pratiquer le français.",
+    "coach_reply": "Bonjour Lesliam ! C'est super que tu utilises un coach vocal pour améliorer ton français. Quel type de phrases ou conversations souhaites-tu pratiquer aujourd'hui ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": true,
+      "french_only_required": false,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "error-free: expect no correction format, Socratic follow-up"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": true,
+    "false_positive_triggered": false,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 8,
+    "item_id": 8,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Bonjour, je m'appelle Lesliam et je travaille sur un coach vocal pour pratiquer le français.",
+    "coach_reply": "Bonjour Lesliam ! C'est génial que tu utilises un coach vocal pour améliorer ton français. Quel est l'objectif de ce projet avec le coach vocal ? Tu veux travailler sur des aspects spécifiques du langage comme la prononciation ou la grammaire ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": true,
+      "french_only_required": false,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "error-free: expect no correction format, Socratic follow-up"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": false,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": true,
+    "false_positive_triggered": false,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 3,
+    "brevity_pass": false
+  }
+]

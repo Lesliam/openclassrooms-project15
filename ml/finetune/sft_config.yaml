@@ -1,0 +1,116 @@
+# Coach behavior SFT — QLoRA config (PREPARATION ONLY, do NOT run here).
+#
+# This config fine-tunes the coach BEHAVIOR (French-only persistence, the
+# 4-part correction format, brevity, Socratic relance, soutenance persona)
+# on the hand-authored corpus in corpus/coach_sft.jsonl. It is the tuned arm
+# of the prompt-baseline-vs-fine-tuned comparison measured by ml/eval.
+#
+# The claim under test is BEHAVIOR CONSISTENCY, not knowledge injection, so
+# the corpus is small and curated and the LoRA rank is deliberately modest.
+#
+# Runner: axolotl-style schema (yaml-driven QLoRA is the most common path).
+# Field names below match axolotl's documented keys, BUT axolotl evolves its
+# schema across releases — VALIDATE every key against the axolotl version you
+# actually install before launching (see README.md "Validate before running").
+# A TRL SFTTrainer alternative is described in README.md if axolotl drifts.
+#
+# HARD constraint: this run is VRAM-bound. It must launch under gpu-solo so
+# wyoming-whisper's ~4 GB resident VRAM is freed first (see README.md and the
+# global infra note "GPU exclusivity"). Do NOT start it while HA voice is in
+# use. Run only when Lesliam is present.
+
+# --- Base model --------------------------------------------------------
+# HF weights matching the Ollama-served `qwen2.5:14b` (instruct variant).
+# Confirm the exact repo + revision against the served model before training;
+# both experiment arms must use the SAME base so the comparison is valid.
+base_model: Qwen/Qwen2.5-14B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: false
+
+# --- Quantization (QLoRA 4-bit) ---------------------------------------
+load_in_4bit: true
+adapter: qlora
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+bnb_4bit_compute_dtype: bfloat16
+
+# --- LoRA --------------------------------------------------------------
+# Modest rank: behavior shaping needs far less capacity than knowledge
+# injection, and a small corpus with a high rank overfits quickly.
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+# All attention + MLP projections (Qwen2 naming). Confirm module names for
+# the exact checkpoint (print model.named_modules() once before training).
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# --- Dataset (chat format) --------------------------------------------
+datasets:
+  - path: corpus/coach_sft.jsonl
+    type: chat_template
+    field_messages: messages
+# Qwen2.5 uses a ChatML-style template. Prefer the tokenizer's built-in
+# chat template if the runner supports it; otherwise pin chatml explicitly.
+chat_template: chatml
+# Train on the assistant turns only (the system + user turns are context,
+# not targets). Confirm the runner's key name for this (axolotl:
+# train_on_inputs: false disables masking-off; here we want inputs masked).
+train_on_inputs: false
+
+# Small held-out split for a dev loss signal (early-stop / overfit watch).
+# 0.1 of 80 = 8 examples. These come from the CORPUS, never from the eval
+# set (the eval set stays fully unseen — see DATA_SEPARATION.md).
+val_set_size: 0.1
+
+# --- Sequence / packing ------------------------------------------------
+# The system prompt body is ~500-650 tokens; a full turn (system + user +
+# assistant) stays well under 1024, so 2048 is safe headroom. Measure the
+# real max length once and lower to reduce VRAM if needed.
+sequence_len: 2048
+sample_packing: false          # tiny corpus; packing adds complexity, no gain
+pad_to_sequence_len: true
+
+# --- Optimization ------------------------------------------------------
+micro_batch_size: 1
+gradient_accumulation_steps: 8 # effective batch 8
+num_epochs: 4                  # tiny corpus -> a few passes; watch val loss
+optimizer: paged_adamw_8bit
+lr_scheduler: cosine
+learning_rate: 0.0002          # 2e-4, standard QLoRA starting point
+warmup_ratio: 0.03
+weight_decay: 0.0
+max_grad_norm: 1.0
+
+# --- Precision / memory ------------------------------------------------
+bf16: true
+tf32: true
+gradient_checkpointing: true
+flash_attention: false         # enable only if a verified build is installed
+
+# Reclaims allocator fragmentation (~1 GB); proven helpful on this 5080 for a
+# prior VRAM-bound run. Also exported by gpu-solo; set here for clarity.
+# PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True   # set via env, see README
+
+# --- Reproducibility / logging ----------------------------------------
+seed: 42
+logging_steps: 1
+save_strategy: epoch
+save_total_limit: 2
+output_dir: ./outputs/coach-qlora-v0
+
+# --- Expected VRAM (ESTIMATE — confirm with a dry run) -----------------
+# qwen2.5:14b in 4-bit ~ 8 GB weights; + LoRA + 8-bit optimizer states (LoRA
+# params only, small) + activations (seq 2048, batch 1, grad checkpointing).
+# Expected peak ~10-12 GB. The 5080 exposes ~15.5 GB usable, of which
+# wyoming-whisper holds ~4 GB -> only ~11.5 GB free with voice up, which is
+# too tight. Hence gpu-solo (stop whisper) is REQUIRED, not optional.
+# These figures are estimates; verify with `nvidia-smi` during a short dry run
+# (num_epochs: 1 on a 4-example subset) before the full run.

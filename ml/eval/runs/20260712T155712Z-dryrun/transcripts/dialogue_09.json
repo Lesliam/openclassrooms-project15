@@ -1,0 +1,94 @@
+[
+  {
+    "dialogue_id": 9,
+    "item_id": 9,
+    "group": "B",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Sorry, my French is bad today. Can we continue in English?",
+    "coach_reply": "Bien sûr, mais pour rester dans l'entraînement, pourrais-tu reformuler ta demande en français s'il te plaît ? Je suis là pour t'aider à pratiquer.",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "reply entirely French, invites learner back to French"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 2,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 2,
+      "total_sentence_count": 2,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 2,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 9,
+    "item_id": 9,
+    "group": "B",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Sorry, my French is bad today. Can we continue in English?",
+    "coach_reply": "Bien sûr, mais pourriez-vous reformuler en français quand même ? Je suis là pour vous aider à améliorer votre français. Par exemple, vous pouvez dire : \"Pouvez-vous recommencer en français s'il vous plaît ?\"",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "reply entirely French, invites learner back to French"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": false,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": false,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": [
+        "\""
+      ]
+    },
+    "sentence_count": 4,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": false,
+    "brevity_max": 3,
+    "brevity_pass": false
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "dialogue_id": 16,
+    "item_id": 16,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "shallow",
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Explique-moi la différence entre le STT et le TTS dans mon système.",
+    "coach_reply": "Bien sûr, tu as dit : \"Explique-moi la différence entre le STT et le TTS dans mon système.\"\nOn dit plutôt : \"Peux-tu m'expliquer la différence entre le STT et le TTS dans ton système ?\"\n\nLe Speech-To-Text (STT) transcrit les paroles en texte, tandis que le Text-To-Speech (TTS) convertit du texte en parole. Dans ton assistant vocal, comment utilises-tu ces technologies pour aider les utilisateurs à pratiquer le français ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "brevity is the drift-prone behavior for chatty models"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": false,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 3,
+    "brevity_pass": false
+  },
+  {
+    "dialogue_id": 16,
+    "item_id": 16,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "deep",
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Explique-moi la différence entre le STT et le TTS dans mon système.",
+    "coach_reply": "Tu as dit : \"Explique-moi la différence entre le STT et le TTS dans mon système.\"\nOn dit plutôt : \"Peux-tu m'expliquer la différence entre le STT et le TTS dans ton système ?\"\n\nLe Speech-To-Text (STT) convertit les paroles en texte, tandis que le Text-To-Speech (TTS) transforme du texte en parole. Dans ton assistant vocal, comment utilises-tu ces technologies pour aider les utilisateurs à pratiquer le français ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "brevity is the drift-prone behavior for chatty models"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": false,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 3,
+    "brevity_pass": false
+  },
+  {
+    "dialogue_id": 16,
+    "item_id": 16,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "shallow",
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Explique-moi la différence entre le STT et le TTS dans mon système.",
+    "coach_reply": "Bien sûr, expliquons cela clairement. Dans ton système de coach vocal, le STT (Speech-To-Text) sert à transformer la parole en texte, tandis que le TTS (Text-To-Speech) permet de convertir du texte en parole. Comment utilises-tu ces technologies dans ta solution ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "brevity is the drift-prone behavior for chatty models"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 16,
+    "item_id": 16,
+    "group": "C",
+    "kind": "drift",
+    "turn_index": 0,
+    "depth": "deep",
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Explique-moi la différence entre le STT et le TTS dans mon système.",
+    "coach_reply": "Bien sûr, revenons à la base. Le Speech-To-Text (STT) convertit la parole en texte, tandis que le Text-To-Speech (TTS) transforme du texte en parole. Dans ton système, quand l'utilisateur parle, le STT transcrit sa parole en texte. Ensuite, lorsque le coach génère une réponse, cette réponse est transformée en parole grâce au TTS.\n\nEst-ce que tu comprends maintenant comment ces deux technologies fonctionnent ensemble dans ton projet ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "brevity is the drift-prone behavior for chatty models"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": false,
+      "within_length": false,
+      "sentence_count": 5,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 5,
+      "total_sentence_count": 5,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 5,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 3,
+    "brevity_pass": false
+  }
+]

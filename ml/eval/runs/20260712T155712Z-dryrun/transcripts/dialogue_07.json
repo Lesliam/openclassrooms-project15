@@ -1,0 +1,92 @@
+[
+  {
+    "dialogue_id": 7,
+    "item_id": 7,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Si j'aurais plus de temps, je ferais aussi la mise à jour à distance.",
+    "coach_reply": "Tu as dit : \"Si j'aurais plus de temps, je ferais aussi la mise à jour à distance.\"\nOn dit plutôt : \"Si j'avais plus de temps, je ferai aussi la mise à jour à distance.\"\nLa forme du conditionnel change selon le verbe et le temps. Essaie de reformuler cette phrase maintenant.",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'si j'aurais' conditional in si-clause -> 'si j'avais'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": false,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 7,
+    "item_id": 7,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Si j'aurais plus de temps, je ferais aussi la mise à jour à distance.",
+    "coach_reply": "Tu as dit : \"Si j'aurais plus de temps, je ferais aussi la mise à jour à distance.\"\n\nOn dit plutôt : \"Si j'avais plus de temps, je ferai aussi la mise à jour à distance.\"\n\nLa forme du conditionnel change selon le verbe. Répète la phrase corrigée et dis-moi quelles autres tâches tu aimerais réaliser si tu avais plus de temps.",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'si j'aurais' conditional in si-clause -> 'si j'avais'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": true,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": true
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": true,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  }
+]

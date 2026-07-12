@@ -1,0 +1,4 @@
+# Evaluation harness dependencies (pinned for reproducibility).
+# Install into ml/eval/.venv (see README.md).
+requests==2.32.3
+langdetect==1.0.9

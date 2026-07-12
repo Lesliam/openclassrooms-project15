@@ -1,0 +1,92 @@
+[
+  {
+    "dialogue_id": 3,
+    "item_id": 3,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Mon projet utilise un modèle qui peut reconnaître le mot de réveil, il est entraîné sur les données que j'ai collecté.",
+    "coach_reply": "Tu as dit : \"Mon projet utilise un modèle qui peut reconnaître le mot de réveil, il est entraîné sur les données que j'ai collecté.\"\n\nOn dit plutôt : \"Mon projet utilise un modèle capable de reconnaître des mots d'activation ; ce modèle a été formé avec des données que j'ai recueillies.\"\n\nLa formulation \"formé avec\" est plus courante en contexte technique. Répète cette phrase, s'il te plaît.",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'que j'ai collecté' agreement -> 'collectées'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": true,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": true
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": true,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 3,
+    "item_id": 3,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Mon projet utilise un modèle qui peut reconnaître le mot de réveil, il est entraîné sur les données que j'ai collecté.",
+    "coach_reply": "Tu as dit : \"Mon projet utilise un modèle qui peut reconnaître le mot de réveil, il est entraîné sur les données que j'ai collecté.\"\n\nOn dit plutôt : \"Mon projet utilise un modèle capable de reconnaître un mot d'activation ; ce modèle a été formé avec des données que j'ai recueillies.\"\n\nLa correction porte sur l'utilisation de termes plus précis et la cohérence grammaticale. Répète cette phrase, s'il te plaît. \n\nComment décrirais-tu maintenant le processus d'entraînement de ton modèle ?",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'que j'ai collecté' agreement -> 'collectées'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": true,
+      "within_length": false,
+      "sentence_count": 5,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 5,
+      "total_sentence_count": 5,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 5,
+    "d1_required": true,
+    "d1_pass": false,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": false
+  }
+]

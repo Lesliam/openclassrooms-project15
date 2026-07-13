@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "input": "paired_grounded_v3.json",
+    "n_total_items": 18,
+    "n_fallthrough": 6,
+    "n_gradable": 12,
+    "denominator_note": "correctness aggregates computed over the 12 items with an actual grounded_v3 correction; the 6 fallthroughs are counted and assessed for recall gap but excluded from correctness %.",
+    "grading_rubric": {
+      "explanation_correct": "grammatical justification actually correct; minimal 'la forme correcte est X' with no invented rule = True; fabricated/wrong rule = False",
+      "correction_form_right": "the corrected surface form the arm outputs is grammatically right",
+      "concise": "restates only the erroneous phrase (or phrase+immediate object), 2-4 sentences"
+    }
+  },
+  "items": [
+    {
+      "dialogue": 1, "turn": 0, "rep": 0, "fallthrough": false,
+      "learner_error": "j'ai acheter -> j'ai acheté (infinitive used where past participle required after avoir)",
+      "tuned":       {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Rule 'après avoir, participe passé acheté' is correct; quotes erroneous phrase + object."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct: 'après l'auxiliaire avoir, participe passé, pas l'infinitif'. Token-tight restatement."}
+    },
+    {
+      "dialogue": 1, "turn": 0, "rep": 1, "fallthrough": false,
+      "learner_error": "j'ai acheter -> j'ai acheté",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": true,
+        "notes": "Fabricated rule 'après je, avoir prend -é' is nonsense; form acheté is right."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Same correct participe-passé template."}
+    },
+    {
+      "dialogue": 2, "turn": 0, "rep": 0, "fallthrough": false,
+      "learner_error": "que elle -> qu'elle (elision before vowel)",
+      "tuned":       {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "'devant elle, que devient qu' correct minimal elision rule."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct general elision rule (voyelle/h muet)."}
+    },
+    {
+      "dialogue": 2, "turn": 0, "rep": 1, "fallthrough": false,
+      "learner_error": "que elle -> qu'elle (elision)",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": true,
+        "notes": "Wrong diagnosis 'on utilise elle, pas elle est' — the error is elision, not a redundant verb; form is right."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct elision rule."}
+    },
+    {
+      "dialogue": 3, "turn": 0, "rep": 0, "fallthrough": false,
+      "learner_error": "que j'ai collecté -> collectées (accord du participe passé avec COD antéposé 'les données')",
+      "tuned":       {"explanation_correct": false, "correction_form_right": false, "concise": false,
+        "notes": "Tuned gave off-topic encouragement + follow-up question; it MISSED the participle-agreement error entirely."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Strong catch: collectées, rule 'accord en genre et nombre avec le COD placé avant' correct (données fem. pl., que = COD antéposé)."}
+    },
+    {
+      "dialogue": 3, "turn": 0, "rep": 1, "fallthrough": false,
+      "learner_error": "collecté -> collectées (accord COD antéposé)",
+      "tuned":       {"explanation_correct": false, "correction_form_right": false, "concise": false,
+        "notes": "Tuned 'corrected' a non-error lexical item (mot de réveil -> mot d'appel) and missed the real grammar error; restated span is the wrong clause."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Same correct accord rule."}
+    },
+    {
+      "dialogue": 5, "turn": 0, "rep": 0, "fallthrough": false,
+      "learner_error": "de utiliser -> d'utiliser (elision)",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": true,
+        "notes": "Wrong rule: 'après décider on utilise le subjonctif' — d'utiliser is an elided infinitive, not a subjunctive; form is right."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct elision rule."}
+    },
+    {
+      "dialogue": 5, "turn": 0, "rep": 1, "fallthrough": false,
+      "learner_error": "de utiliser -> d'utiliser (elision)",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": true,
+        "notes": "Misleading: 'décider se construit avec d' et non de' — décider always governs 'de', which merely elides to d' before a vowel; the stated rule is wrong as a general claim. Form right."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct elision rule."}
+    },
+    {
+      "dialogue": 14, "turn": 0, "rep": 0, "fallthrough": false,
+      "learner_error": "j'ai acheter -> j'ai acheté",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": false,
+        "notes": "Explanation invokes agreement 'accorde avec légumes' — wrong: with avoir there is no agreement with a COD placed AFTER (would give achetés). Right form by coincidence. Restates the whole sentence incl. irrelevant first clause."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct participe-passé template."}
+    },
+    {
+      "dialogue": 14, "turn": 0, "rep": 1, "fallthrough": false,
+      "learner_error": "j'ai acheter -> j'ai acheté",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": false,
+        "notes": "Fabricated rule 'après hier, le verbe prend le participe passé'; restates the whole sentence."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct template."}
+    },
+    {
+      "dialogue": 18, "turn": 2, "rep": 0, "fallthrough": false,
+      "learner_error": "j'ai définir -> j'ai défini (infinitive where past participle required)",
+      "tuned":       {"explanation_correct": true,  "correction_form_right": true, "concise": false,
+        "notes": "Correct rule 'après avoir, participe passé défini'; but restates the whole clause incl. irrelevant 'j'ai fait un sprint de quatre semaines'."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct. Crucially did NOT touch 'le planning' — the v2 false positive is gone."}
+    },
+    {
+      "dialogue": 18, "turn": 2, "rep": 1, "fallthrough": false,
+      "learner_error": "j'ai définir -> j'ai défini",
+      "tuned":       {"explanation_correct": false, "correction_form_right": true, "concise": true,
+        "notes": "Tuned silently assumed 'défini' (misquotes learner) and instead did a lexical swap descope -> 'fonctionnalités à exclure'; it did not surface/justify the actual grammar error. Output text is grammatical, so form counted right; explanation off-target."},
+      "grounded_v3": {"explanation_correct": true,  "correction_form_right": true, "concise": true,
+        "notes": "Correct participe-passé template; 'le planning' left untouched (no false positive)."}
+    },
+    {
+      "dialogue": 4, "turn": 0, "rep": 0, "fallthrough": true,
+      "recall_gap": "missed",
+      "real_error": "je veux que mon terminal est -> soit (subjunctive required after 'je veux que')",
+      "notes": "Genuine grammar error present; grounded_v3 precision gate could not classify the mood error and suppressed -> recall gap. Tuned did correct it ('soit')."
+    },
+    {
+      "dialogue": 4, "turn": 0, "rep": 1, "fallthrough": true,
+      "recall_gap": "missed",
+      "real_error": "est -> soit (subjunctive after je veux que)",
+      "notes": "Same real error, suppressed by grounded gate -> recall gap."
+    },
+    {
+      "dialogue": 6, "turn": 0, "rep": 0, "fallthrough": true,
+      "recall_gap": "missed",
+      "real_error": "plus meilleure -> meilleure ('meilleur' is already the comparative of 'bon'; 'plus meilleure' is incorrect)",
+      "notes": "Genuine error present; grounded gate could not classify irregular-comparative and suppressed -> recall gap. Tuned corrected it."
+    },
+    {
+      "dialogue": 6, "turn": 0, "rep": 1, "fallthrough": true,
+      "recall_gap": "missed",
+      "real_error": "plus meilleure -> meilleure",
+      "notes": "Same real error, suppressed -> recall gap."
+    },
+    {
+      "dialogue": 7, "turn": 0, "rep": 0, "fallthrough": true,
+      "recall_gap": "missed",
+      "real_error": "si j'aurais -> si j'avais (after 'si', hypothetical uses the imperfect, not the conditional)",
+      "notes": "Genuine error present; grounded gate could not classify si+conditional and suppressed -> recall gap. Tuned corrected the form ('si j'avais') though with a wrong 'subjonctif' justification."
+    },
+    {
+      "dialogue": 7, "turn": 0, "rep": 1, "fallthrough": true,
+      "recall_gap": "missed",
+      "real_error": "si j'aurais -> si j'avais",
+      "notes": "Same real error, suppressed -> recall gap."
+    }
+  ],
+  "aggregates": {
+    "gradable_N": 12,
+    "tuned":       {"explanation_correct_pct": 25.0, "correction_form_right_pct": 83.3, "concise_pct": 58.3},
+    "grounded_v3": {"explanation_correct_pct": 100.0, "correction_form_right_pct": 100.0, "concise_pct": 100.0},
+    "fallthrough": {"count": 6, "missed_real_error": 6, "correctly_declined": 0}
+  }
+}

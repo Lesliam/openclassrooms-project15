@@ -94,14 +94,20 @@ def build_run_config(
     judge_enabled: bool,
     judge_model: str,
     decode: DecodeOptions,
+    model_under_test: str = constants.MODEL_UNDER_TEST,
 ) -> RunConfig:
-    """Assemble the immutable run config, hashing the frozen inputs."""
+    """Assemble the immutable run config, hashing the frozen inputs.
+
+    ``model_under_test`` defaults to the baseline arm; the tuned arm passes the
+    fine-tuned Ollama tag so both arms run through the same frozen prompt and
+    scoring, differing only by the served model.
+    """
     system_prompt = load_system_prompt()
     eval_set_text = _read_optional(constants.EVAL_SET_FILE)
     return RunConfig(
         run_id=run_id,
         mode=mode,
-        model_under_test=constants.MODEL_UNDER_TEST,
+        model_under_test=model_under_test,
         judge_model=judge_model,
         judge_enabled=judge_enabled,
         repetitions=repetitions,

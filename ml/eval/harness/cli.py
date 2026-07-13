@@ -77,6 +77,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="judge model name recorded in config (judge not yet wired)",
     )
     parser.add_argument(
+        "--model",
+        default=constants.MODEL_UNDER_TEST,
+        help=(
+            "Ollama model tag under test (default: the baseline arm). Pass the "
+            "fine-tuned tag to run the tuned arm through the same prompt/scoring."
+        ),
+    )
+    parser.add_argument(
         "--run-id",
         default=None,
         help="explicit run id (default: <utc-timestamp>-<mode>)",
@@ -89,10 +97,9 @@ def _default_run_id(mode: str) -> str:
     return f"{stamp}-{mode}"
 
 
-def _health_check(client: OllamaClient) -> None:
+def _health_check(client: OllamaClient, model: str) -> None:
     models = client.list_models()
-    required = {constants.MODEL_UNDER_TEST}
-    missing = [m for m in required if not any(m in name for name in models)]
+    missing = [] if any(model in name for name in models) else [model]
     if missing:
         raise OllamaError(f"required model(s) not present on server: {missing}")
     decode = DecodeOptions(
@@ -102,7 +109,7 @@ def _health_check(client: OllamaClient) -> None:
         num_ctx=_HEALTH_CHECK_MAX_TOKENS_CTX,
     )
     reply = client.chat(
-        model=constants.MODEL_UNDER_TEST,
+        model=model,
         messages=[Message(role="user", content=_HEALTH_CHECK_PROMPT)],
         options=decode,
     )
@@ -149,9 +156,10 @@ def main(argv: list[str] | None = None) -> int:
         judge_enabled=judge_enabled,
         judge_model=args.judge_model,
         decode=base_decode,
+        model_under_test=args.model,
     )
 
-    print(f"[harness] mode={mode} run_id={run_id}", flush=True)
+    print(f"[harness] mode={mode} run_id={run_id} model={args.model}", flush=True)
     print("[harness] spec guard: checking dialogues match eval_set_v0.md...", flush=True)
     try:
         verify_dialogues_match_spec()
@@ -163,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     client = OllamaClient()
     print("[harness] health check...", flush=True)
     try:
-        _health_check(client)
+        _health_check(client, args.model)
     except OllamaError as exc:
         print(f"[harness] health check FAILED: {exc}", file=sys.stderr)
         return 2

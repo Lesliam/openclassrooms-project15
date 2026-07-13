@@ -38,7 +38,7 @@ def test_redact_host_schemeless_input_keeps_port_and_hides_host() -> None:
 
 
 def test_redact_host_never_leaks_raw_ip() -> None:
-    raw_ip = "192.168.1.37"
+    raw_ip = "192.0.2.37"
     assert raw_ip not in config._redact_host(f"http://{raw_ip}:11434")
 
 
@@ -61,14 +61,14 @@ def _make_run_config(base_url: str) -> config.RunConfig:
 
 
 def test_run_config_to_dict_redacts_host() -> None:
-    cfg = _make_run_config("http://192.168.1.37:11434")
+    cfg = _make_run_config("http://192.0.2.37:11434")
     data = cfg.to_dict()
     assert data["ollama_base_url"] == "http://REDACTED:11434"
-    assert "192.168.1.37" not in data["ollama_base_url"]
+    assert "192.0.2.37" not in data["ollama_base_url"]
 
 
 def test_run_config_to_dict_never_emits_raw_host_anywhere() -> None:
-    raw_host = "192.168.1.37"
+    raw_host = "192.0.2.37"
     cfg = _make_run_config(f"http://{raw_host}:11434")
     data = cfg.to_dict()
     # No value in the serialized config may contain the raw host.

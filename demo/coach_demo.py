@@ -53,11 +53,15 @@ _HTTP_READ_TIMEOUT_S = 180.0
 # --- Decoding parameters ---------------------------------------------------
 #
 # Deployment-realistic moderate sampling (not greedy), matching the eval
-# harness so the demo behaves like the measured baseline. num_ctx is large
-# enough to hold a long role-play conversation.
+# harness so the demo behaves like the measured baseline. num_ctx is sized to
+# fit alongside the resident STT model on a shared 16 GB GPU: at 8192 the KV
+# cache (~3 GB) leaves too little headroom and the 14B model intermittently
+# fails to (re)load, surfacing as a spurious "backend unreachable". 4096 halves
+# the KV cache, matches Ollama's own VRAM-based default, and is ample for the
+# short coaching / soutenance dialogues.
 _DECODE_TEMPERATURE = 0.7
 _DECODE_TOP_P = 0.9
-_DECODE_NUM_CTX = 8192
+_DECODE_NUM_CTX = 4096
 
 # --- Paths -----------------------------------------------------------------
 

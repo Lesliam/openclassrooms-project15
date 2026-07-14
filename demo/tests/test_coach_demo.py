@@ -147,7 +147,7 @@ def test_decode_options_as_dict_keys() -> None:
     assert coach_demo.DecodeOptions().as_dict() == {
         "temperature": 0.7,
         "top_p": 0.9,
-        "num_ctx": 8192,
+        "num_ctx": 4096,
     }
 
 

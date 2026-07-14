@@ -229,6 +229,10 @@ def message_content_to_text(content: object) -> str:
             for part in content
             if isinstance(part, dict) and part.get("type") == "text"
         )
+    # None (e.g. an empty/interrupted turn) becomes an empty string rather than
+    # the literal "None"; any other unexpected type falls back to its str().
+    if content is None:
+        return ""
     return str(content)
 
 
@@ -302,7 +306,7 @@ def build_demo(base_url: Optional[str] = None) -> gr.Blocks:
 
     def respond(
         user_message: str,
-        history: list[dict[str, str]],
+        history: list[dict[str, object]],
     ) -> tuple[str, list[dict[str, str]]]:
         """Append the learner turn, query the coach, append the reply."""
         text = user_message.strip()

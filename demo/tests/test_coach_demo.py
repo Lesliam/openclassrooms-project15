@@ -6,7 +6,8 @@ live Ollama server (the HTTP layer is monkeypatched). Coverage:
 1. ``resolve_ollama_base_url`` env precedence and expansion;
 2. ``load_system_prompt`` returns the body after the ``---`` separator, stripped;
 3. message-history assembly (system + alternating user/assistant) into the
-   ``/api/chat`` payload;
+   ``/api/chat`` payload, including normalization of Gradio's list-typed
+   message content to the string content Ollama requires (multi-turn 400 fix);
 4. graceful degradation: a failing Ollama call yields the in-character fallback
    reply instead of propagating the exception.
 
@@ -223,6 +224,11 @@ def test_message_content_to_text_flattens_gradio_text_parts() -> None:
 def test_message_content_to_text_skips_non_text_parts() -> None:
     content = [{"type": "text", "text": "hi"}, {"type": "file", "path": "/x.png"}]
     assert coach_demo.message_content_to_text(content) == "hi"
+
+
+def test_message_content_to_text_empty_and_none_yield_empty_string() -> None:
+    assert coach_demo.message_content_to_text([]) == ""
+    assert coach_demo.message_content_to_text(None) == ""
 
 
 def test_respond_sends_string_content_for_gradio_list_history(

@@ -211,6 +211,27 @@ def chat_once(
     return content
 
 
+def message_content_to_text(content: object) -> str:
+    """Coerce a chat message's ``content`` to plain text.
+
+    Gradio's Chatbot represents message content as a list of typed parts
+    (e.g. ``[{"type": "text", "text": "hi"}]``), but Ollama's ``/api/chat``
+    requires ``content`` to be a string and rejects a list with HTTP 400
+    ("cannot unmarshal array ... into ... content of type string"). This
+    flattens the Gradio text parts back into a string; a plain string (the
+    first-turn case) passes through unchanged.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            part.get("text", "")
+            for part in content
+            if isinstance(part, dict) and part.get("type") == "text"
+        )
+    return str(content)
+
+
 def coach_reply(
     base_url: str,
     system_prompt: str,
@@ -287,7 +308,14 @@ def build_demo(base_url: Optional[str] = None) -> gr.Blocks:
         text = user_message.strip()
         if not text:
             return "", history
-        conversation = [*history, {"role": "user", "content": text}]
+        # Gradio hands the accumulated history back with list-typed content
+        # (its multimodal parts format); normalize to strings so Ollama accepts
+        # the multi-turn payload instead of rejecting it with HTTP 400.
+        conversation = [
+            {"role": turn["role"], "content": message_content_to_text(turn["content"])}
+            for turn in history
+        ]
+        conversation.append({"role": "user", "content": text})
         try:
             reply = coach_reply(resolved_url, system_prompt, conversation)
         except OllamaChatError:

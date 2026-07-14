@@ -207,6 +207,67 @@ def test_coach_reply_prepends_system_and_preserves_multi_turn_order(
     ]
 
 
+# --- 3b. Gradio content normalization (multi-turn HTTP 400 regression) -------
+
+
+def test_message_content_to_text_passes_string_through() -> None:
+    assert coach_demo.message_content_to_text("bonjour") == "bonjour"
+
+
+def test_message_content_to_text_flattens_gradio_text_parts() -> None:
+    # Gradio 6 Chatbot stores content as a list of typed parts.
+    content = [{"type": "text", "text": "bon"}, {"type": "text", "text": "jour"}]
+    assert coach_demo.message_content_to_text(content) == "bonjour"
+
+
+def test_message_content_to_text_skips_non_text_parts() -> None:
+    content = [{"type": "text", "text": "hi"}, {"type": "file", "path": "/x.png"}]
+    assert coach_demo.message_content_to_text(content) == "hi"
+
+
+def test_respond_sends_string_content_for_gradio_list_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: Gradio hands history back with list-typed content; respond
+    must normalize it to strings, else Ollama rejects the multi-turn call with
+    HTTP 400 ("cannot unmarshal array ... content of type string")."""
+    captured: dict[str, Any] = {}
+
+    def fake_post(url: str, json: dict, timeout: Any) -> _FakeResponse:
+        captured["payload"] = json
+        return _FakeResponse(200, {"message": {"content": "Reponse."}})
+
+    monkeypatch.setattr(coach_demo.requests, "post", fake_post)
+
+    demo = coach_demo.build_demo(base_url="http://testhost:11434")
+    respond = _get_respond_handler(demo)
+
+    gradio_history = [
+        {
+            "role": "user",
+            "content": [{"type": "text", "text": "bonjour"}],
+            "metadata": None,
+            "options": None,
+        },
+        {
+            "role": "assistant",
+            "content": [{"type": "text", "text": "Salut !"}],
+            "metadata": None,
+            "options": None,
+        },
+    ]
+    _cleared, new_history = respond("ca va ?", gradio_history)
+
+    sent = captured["payload"]["messages"]
+    # Every content field reaching Ollama must be a plain string.
+    assert all(isinstance(message["content"], str) for message in sent)
+    assert sent[0]["role"] == "system"
+    assert sent[1]["content"] == "bonjour"
+    assert sent[2]["content"] == "Salut !"
+    assert sent[3]["content"] == "ca va ?"
+    assert new_history[-1] == {"role": "assistant", "content": "Reponse."}
+
+
 def test_chat_once_missing_content_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_post(url: str, json: dict, timeout: Any) -> _FakeResponse:
         return _FakeResponse(200, {"done": True})  # no "message" key

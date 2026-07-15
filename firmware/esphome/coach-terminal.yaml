@@ -6,9 +6,11 @@
 #            Wiring: VDD->3V3, GND->GND, L/R->GND (left channel), WS/SCK/SD below
 # Screen:    present but model unknown — display block commented out, TODO
 #
-# STATUS: syntactically valid YAML skeleton. NOT expected to compile yet:
-# pins are placeholders, secrets are not populated, and some component keys
-# must be validated against the installed ESPHome version at first compile.
+# STATUS: audio pins confirmed against the HW-678A vendor manual (2026-07-15):
+# I2S mic WS=4/SCK=5/SD=6 and I2S amp DIN=7/BCLK=15/LRC=16 follow the board's
+# recommended audio-pin grouping; onboard RGB is GPIO48. Still to do before a
+# clean compile: populate secrets and validate component keys against the
+# installed ESPHome version at first compile.
 #
 # References:
 #   https://esphome.io/components/esp32/
@@ -67,8 +69,8 @@ i2s_audio:
     i2s_lrclk_pin: GPIO4   # INMP441 WS  (proposed free pin; adjust at wiring)
     i2s_bclk_pin: GPIO5    # INMP441 SCK (proposed free pin; adjust at wiring)
   - id: i2s_bus_amp
-    i2s_lrclk_pin: GPIO18  # example pin — MAX98357 LRC; confirm final wiring
-    i2s_bclk_pin: GPIO17   # example pin — MAX98357 BCLK; confirm final wiring
+    i2s_lrclk_pin: GPIO16  # MAX98357 LRC — HW-678A vendor-recommended audio pin (confirmed 2026-07-15)
+    i2s_bclk_pin: GPIO15   # MAX98357 BCLK — HW-678A vendor-recommended audio pin
 
 microphone:
   - platform: i2s_audio
@@ -85,7 +87,7 @@ speaker:
   - platform: i2s_audio
     id: terminal_speaker
     i2s_audio_id: i2s_bus_amp
-    i2s_dout_pin: GPIO16   # example pin — MAX98357 DIN; confirm final wiring
+    i2s_dout_pin: GPIO7    # MAX98357 DIN — HW-678A vendor-recommended audio pin
     dac_type: external
     sample_rate: 16000
     channel: mono          # MAX98357 is a mono amplifier
@@ -141,7 +143,7 @@ light:
   - platform: esp32_rmt_led_strip
     id: status_led
     name: "Status LED"
-    pin: GPIO48            # TODO: confirm onboard RGB LED pin (48 vs 38)
+    pin: GPIO48            # onboard WS2812 — confirmed GPIO48 (HW-678A manual + factory demo)
     num_leds: 1
     rgb_order: GRB
     chipset: ws2812

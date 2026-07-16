@@ -4,13 +4,16 @@
 # Audio out: MAX98357 I2S amplifier + 4-ohm 3W speaker
 # Audio in:  INMP441 I2S MEMS microphone (confirmed 2026-07-06, CS-147)
 #            Wiring: VDD->3V3, GND->GND, L/R->GND (left channel), WS/SCK/SD below
-# Screen:    present but model unknown — display block commented out, TODO
+# Screen:    SSD1306 128x64 OLED, I2C SDA=41/SCL=42 @ 0x3C (confirmed 2026-07-16)
 #
-# STATUS: audio pins confirmed against the HW-678A vendor manual (2026-07-15):
-# I2S mic WS=4/SCK=5/SD=6 and I2S amp DIN=7/BCLK=15/LRC=16 follow the board's
-# recommended audio-pin grouping; onboard RGB is GPIO48. Still to do before a
-# clean compile: populate secrets and validate component keys against the
-# installed ESPHome version at first compile.
+# STATUS: all four subsystems validated individually on the HW-678A board via
+# the bring-up test configs (2026-07-16): board+PSRAM, INMP441 mic + KWS,
+# SSD1306 OLED, MAX98357 amp. Audio pins confirmed against the vendor manual
+# (2026-07-15): I2S mic WS=4/SCK=5/SD=6, I2S amp DIN=7/BCLK=15/LRC=16, RGB
+# GPIO48. This production config folds those four into the voice_assistant
+# pipeline. Before flashing: populate secrets.yaml (cp from the .example).
+# Amp idle-hiss mitigation (SD-pin gating on GPIO2) is an OPTIONAL block at
+# the bottom — it requires physically rewiring MAX98357 SD -> GPIO2 first.
 #
 # References:
 #   https://esphome.io/components/esp32/
@@ -42,10 +45,22 @@ psram:
   mode: octal
   speed: 80MHz
 
+# Coach state string shown on the OLED, driven by the voice_assistant events.
+globals:
+  - id: coach_state
+    type: std::string
+    restore_value: false
+    initial_value: '"Dites Okay Nabu"'
+
 logger:
   # Serial logging can conflict with I2S DMA timing on some setups;
   # switch to logger over network only if audio glitches appear.
   level: DEBUG
+  # On the ESP32-S3 (esp-idf) the default logger UART is the native USB-JTAG
+  # peripheral; app logs then never reach the CH343 USB-UART adapter used for
+  # flashing/monitoring. Pin the logger to UART0 so logs come out the CH343.
+  # (Validated 2026-07-16 across every bring-up test config.)
+  hardware_uart: UART0
 
 wifi:
   ssid: !secret wifi_ssid
@@ -61,6 +76,12 @@ api:
 ota:
   - platform: esphome
     password: !secret ota_password
+
+# I2C bus for the SSD1306 OLED (confirmed 2026-07-16: SDA=41, SCL=42, addr 0x3C).
+i2c:
+  sda: GPIO41
+  scl: GPIO42
+  frequency: 400kHz
 
 # Two independent I2S buses: the S3 has two I2S peripherals, so the mic
 # (RX) and the MAX98357 (TX) each get their own bus.
@@ -117,20 +138,24 @@ voice_assistant:
   auto_gain: 31dBFS
   volume_multiplier: 2.0
   on_listening:
+    - lambda: 'id(coach_state) = "Ecoute...";'
     - light.turn_on:
         id: status_led
         red: 0%
         green: 0%
         blue: 100%
   on_tts_start:
+    - lambda: 'id(coach_state) = "Coach parle";'
     - light.turn_on:
         id: status_led
         red: 0%
         green: 100%
         blue: 0%
   on_end:
+    - lambda: 'id(coach_state) = "Dites Okay Nabu";'
     - light.turn_off: status_led
   on_error:
+    - lambda: 'id(coach_state) = "Erreur";'
     - light.turn_on:
         id: status_led
         red: 100%
@@ -149,13 +174,29 @@ light:
     chipset: ws2812
     default_transition_length: 0s
 
-# Screen: a small display is physically present but its model/driver/pins
-# are unknown. Uncomment and fill in once identified.
-# display:
-#   - platform: TODO       # TODO: identify screen model (SSD1306? ST7789? ...)
-#     # pins / bus (i2c or spi): TODO
-#     lambda: |-
-#       it.print(0, 0, id(some_font), "Coach FR");
+# Screen: SSD1306 128x64 monochrome OLED, I2C @ 0x3C (confirmed 2026-07-16).
+font:
+  - file: "gfonts://Roboto"
+    id: font_big
+    size: 20
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 12
+
+sensor:
+  - platform: uptime
+    id: uptime_s
+    update_interval: 1s
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 500ms
+    lambda: |-
+      it.print(0, 0, id(font_big), "Coach FR");
+      it.printf(0, 26, id(font_small), "%s", id(coach_state).c_str());
+      it.printf(0, 54, id(font_small), "up: %.0f s", id(uptime_s).state);
 
 switch:
   - platform: template
@@ -163,3 +204,22 @@ switch:
     id: mute_switch
     optimistic: true
     # TODO: wire to micro_wake_word stop/start so mute actually disables KWS
+
+# --- OPTIONAL: amp idle-hiss mitigation via SD-pin gating -------------------
+# The MAX98357 breakout drives a faint idle hiss because its SD pin is held
+# enabled. The clean fix is to gate SD from a GPIO so the amp only powers up
+# while the coach is speaking. This is DISABLED by default because it requires
+# a physical rewire first: MAX98357 SD -> GPIO2 (and remove the SD pull-up on
+# the breakout so the GPIO fully controls it). If SD is NOT rewired, leaving
+# this block active would drive GPIO2 low and mute the amp permanently.
+#
+# To enable after rewiring SD -> GPIO2:
+#   1. Uncomment the output below.
+#   2. In voice_assistant: on_tts_start add `- output.turn_on: amp_sd`
+#      and on_end add `- output.turn_off: amp_sd`.
+#
+# output:
+#   - platform: gpio
+#     id: amp_sd
+#     pin: GPIO2
+#     # default state is OFF (amp shut down) -> only powered during TTS

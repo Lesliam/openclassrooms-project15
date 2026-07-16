@@ -144,6 +144,14 @@ voice_assistant:
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
+  # micro_wake_word must be explicitly started; it does not auto-run. Tie it to
+  # the HA client connection so the wake word only listens when a pipeline is
+  # available (a wake with no client would just error), and resume it after
+  # each interaction (on_end/on_error) so it keeps listening.
+  on_client_connected:
+    - micro_wake_word.start:
+  on_client_disconnected:
+    - micro_wake_word.stop:
   on_listening:
     - lambda: 'id(coach_state) = "Ecoute...";'
     - light.turn_on:
@@ -163,6 +171,7 @@ voice_assistant:
     - lambda: 'id(coach_state) = "Dites Okay Nabu";'
     - output.turn_off: amp_sd     # shut the amp down at idle (no hiss)
     - light.turn_off: status_led
+    - micro_wake_word.start:      # resume listening for the next wake word
   on_error:
     - lambda: 'id(coach_state) = "Erreur";'
     - output.turn_off: amp_sd
@@ -171,6 +180,7 @@ voice_assistant:
         red: 100%
         green: 0%
         blue: 0%
+    - micro_wake_word.start:      # keep listening even after an error
 
 # Status LED placeholder — many S3 devkits have an onboard WS2812 on GPIO48
 # (some board revisions use GPIO38). TODO: confirm on the actual board.

@@ -50,7 +50,9 @@ globals:
   - id: coach_state
     type: std::string
     restore_value: false
-    initial_value: '"Dites Okay Nabu"'
+    # Boot state: NOT ready to wake yet (no wifi/HA, wake word not started).
+    # The screen only shows the ready prompt once HA connects (below).
+    initial_value: '"Demarrage..."'
 
 logger:
   # Serial logging can conflict with I2S DMA timing on some setups;
@@ -151,9 +153,14 @@ voice_assistant:
   # available (a wake with no client would just error), and resume it after
   # each interaction (on_end/on_error) so it keeps listening.
   on_client_connected:
+    # HA connected -> wake word is now listening -> the screen may show the
+    # ready prompt. Until this fires the screen shows "Demarrage...".
     - micro_wake_word.start:
+    - lambda: 'id(coach_state) = "Dites Okay Nabu";'
   on_client_disconnected:
+    # Lost HA (incl. a wifi drop) -> not ready; tell the user to wait.
     - micro_wake_word.stop:
+    - lambda: 'id(coach_state) = "Connexion HA...";'
   on_listening:
     - lambda: 'id(coach_state) = "Ecoute...";'
     - light.turn_on:
@@ -178,9 +185,18 @@ voice_assistant:
   on_tts_stream_end:
     - output.turn_off: amp_sd     # amp off only after playback completes (no hiss)
     - lambda: 'id(coach_state) = "Dites Okay Nabu";'
+    - micro_wake_word.start:      # resume listening only AFTER playback ends
   on_end:
     - light.turn_off: status_led
-    - micro_wake_word.start:      # resume listening for the next wake word
+    # Only resume the wake word here if nothing is playing (a no-response turn).
+    # For a normal TTS turn on_end fires mid-playback; restarting the mic then
+    # caused I2S "parent bus is busy" -- on_tts_stream_end handles that case.
+    - if:
+        condition:
+          not:
+            speaker.is_playing: terminal_speaker
+        then:
+          - micro_wake_word.start:
   on_error:
     - lambda: 'id(coach_state) = "Erreur";'
     - output.turn_off: amp_sd

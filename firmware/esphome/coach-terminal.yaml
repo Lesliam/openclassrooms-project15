@@ -243,7 +243,7 @@ display:
     lambda: |-
       it.print(0, 0, id(font_big), "Coach FR");
       it.printf(0, 26, id(font_small), "%s", id(coach_state).c_str());
-      it.printf(0, 54, id(font_small), "up: %.0f s", id(uptime_s).state);
+      it.printf(0, 48, id(font_small), "up: %.0f s", id(uptime_s).state);
 
 switch:
   - platform: template

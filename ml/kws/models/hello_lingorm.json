@@ -2,7 +2,6 @@
   "type": "micro",
   "wake_word": "hello lingorm",
   "author": "P15 Coach Vocal FR",
-  "website": "",
   "model": "hello_lingorm.tflite",
   "trained_languages": [
     "en"

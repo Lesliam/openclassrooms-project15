@@ -128,14 +128,16 @@ micro_wake_word:
   id: kws
   microphone: terminal_mic
   models:
-    # Bring-up model: stock, proven-good. Proves the wake -> pipeline path.
-    - model: okay_nabu
-    # NEXT: swap in the custom "hello lingorm" model (CS-152, ml/kws/models/).
-    # ESPHome rejects a LOCAL manifest whose "model" is a bare filename
-    # ("Expected a file scheme or a URL scheme with host"); the tflite ref must
-    # be a file:// or http(s):// scheme. Options: (a) serve the manifest+tflite
-    # over a local http URL, or (b) reference the tflite via a file:// URL in a
-    # build-local manifest copy (keep the committed manifest scheme-clean).
+    # The custom project wake word "hello lingorm" (CS-152), loaded from the
+    # local manifest in ml/kws/models/. ESPHome validates every manifest URL
+    # field, so the manifest must NOT carry an empty "website" (that tripped
+    # "Expected a file scheme or a URL scheme with host"); the committed
+    # manifest has it removed.
+    #
+    # SINGLE model only: running two models (hello_lingorm + okay_nabu) together
+    # overran the S3's real-time KWS inference budget and BROKE detection for
+    # both. One model detects cleanly (~0.90 on "hello lingorm", cutoff 0.87).
+    - model: ../../ml/kws/models/hello_lingorm.json
   on_wake_word_detected:
     - voice_assistant.start:
 
@@ -156,7 +158,7 @@ voice_assistant:
     # HA connected -> wake word is now listening -> the screen may show the
     # ready prompt. Until this fires the screen shows "Demarrage...".
     - micro_wake_word.start:
-    - lambda: 'id(coach_state) = "Dites Okay Nabu";'
+    - lambda: 'id(coach_state) = "Dites hello lingorm";'
   on_client_disconnected:
     # Lost HA (incl. a wifi drop) -> not ready; tell the user to wait.
     - micro_wake_word.stop:
@@ -184,7 +186,7 @@ voice_assistant:
     - output.turn_on: amp_sd
   on_tts_stream_end:
     - output.turn_off: amp_sd     # amp off only after playback completes (no hiss)
-    - lambda: 'id(coach_state) = "Dites Okay Nabu";'
+    - lambda: 'id(coach_state) = "Dites hello lingorm";'
     - micro_wake_word.start:      # resume listening only AFTER playback ends
   on_end:
     - light.turn_off: status_led

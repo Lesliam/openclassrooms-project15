@@ -32,6 +32,17 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  # Start the on-device wake word as soon as the device boots, DECOUPLED from the
+  # HA connection. Previously the wake word was tied to on_client_connected /
+  # on_client_disconnected, so every wifi/HA drop (which happened ~every minute on
+  # this hidden-SSID Freebox) left the terminal DEAF until HA reconnected -> the
+  # "3 tries, 1 wake" problem. Now it always listens; a wake fired during an HA
+  # outage just errors gracefully (on_error restarts it). priority -100 runs this
+  # late in boot, after the microphone/PSRAM components are initialized.
+  on_boot:
+    priority: -100
+    then:
+      - micro_wake_word.start:
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -65,8 +76,16 @@ logger:
   hardware_uart: UART0
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  # Single network expressed as a networks: list so the BSSID can be pinned.
+  # Lock association to the STRONG AP radio: this SSID is served by two BSSIDs
+  # (Freebox); on 2026-07-16 the device roamed to the WEAKER one (joined 22:22:80
+  # @ -62 dB over 8B:5F:74 @ -53 dB), which drove the Beacon-Timeout drops. Pinning
+  # the BSSID keeps it on the strong radio and stops the roam churn. If this AP is
+  # ever powered off, comment the bssid line so it can associate to the other BSSID.
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+      bssid: 3A:07:16:8B:5F:74
   # The target AP (Freebox) broadcasts a HIDDEN SSID. Scan-based association
   # fails ("No networks found") and the device thrashes between reconnect
   # phases. fast_connect skips the scan and associates directly to the
@@ -74,6 +93,14 @@ wifi:
   # that were causing 'Beacon Timeout' drops. (Fixes the 2026-07-16 wifi churn.)
   fast_connect: true
   power_save_mode: none
+  # Optional: pin a static IP to skip DHCP renegotiation on every reconnect. The
+  # device took 192.168.1.75 via DHCP. To use it, uncomment and CONFIRM the
+  # gateway/subnet for your Freebox first -- a wrong gateway makes the device
+  # unreachable (would then need a serial re-flash to recover):
+  # manual_ip:
+  #   static_ip: 192.168.1.75
+  #   gateway: 192.168.1.254    # <-- CONFIRM: your Freebox LAN gateway IP
+  #   subnet: 255.255.255.0
   ap:
     ssid: "Coach-Terminal Fallback"
     password: !secret fallback_ap_password
@@ -150,18 +177,17 @@ voice_assistant:
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
-  # micro_wake_word must be explicitly started; it does not auto-run. Tie it to
-  # the HA client connection so the wake word only listens when a pipeline is
-  # available (a wake with no client would just error), and resume it after
-  # each interaction (on_end/on_error) so it keeps listening.
+  # micro_wake_word is explicitly started on esphome.on_boot (above) and kept
+  # running independently of HA. It is only paused by voice_assistant during a
+  # conversation turn and resumed on on_tts_stream_end / on_end / on_error below.
   on_client_connected:
-    # HA connected -> wake word is now listening -> the screen may show the
-    # ready prompt. Until this fires the screen shows "Demarrage...".
-    - micro_wake_word.start:
+    # HA (re)connected -> a pipeline is available. Wake word is already listening
+    # from boot; here we only refresh the on-screen ready prompt.
     - lambda: 'id(coach_state) = "Dites hello lingorm";'
   on_client_disconnected:
-    # Lost HA (incl. a wifi drop) -> not ready; tell the user to wait.
-    - micro_wake_word.stop:
+    # Lost HA (incl. a wifi drop). Do NOT stop the wake word -- keep listening so
+    # the terminal is not deaf during the frequent reconnects. A wake fired while
+    # HA is down errors gracefully via on_error (which restarts the wake word).
     - lambda: 'id(coach_state) = "Connexion HA...";'
   on_listening:
     - lambda: 'id(coach_state) = "Ecoute...";'

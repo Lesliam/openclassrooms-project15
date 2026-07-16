@@ -1,0 +1,67 @@
+# coach-terminal-screentest.yaml — SSD1306 OLED bring-up test.
+#
+# Isolates the display path: I2C + SSD1306, NO mic / amp / wifi. The mic may
+# stay wired (different pins) — this config just doesn't use it.
+#
+# Wire the OLED (board powered OFF):
+#   VCC->3V3  GND->GND  SCL->GPIO42  SDA->GPIO41
+#
+# Flash + watch:
+#   esphome run coach-terminal-screentest.yaml --device /dev/ttyACM0
+#   (first build downloads the Roboto font; if it stops at
+#    "waiting for download", tap RST once without BOOT)
+#
+# PASS (two signals):
+#   1. Boot log: "Found i2c device at address 0x3C" (the OLED answered on I2C).
+#   2. The OLED shows "Coach FR" + "OLED OK" + a live "uptime: N s" counter.
+# If the log shows 0x3D instead of 0x3C, change `address` below to 0x3D.
+# If your panel is 128x32 (short), change `model` to "SSD1306 128x32".
+
+esphome:
+  name: coach-screentest
+  friendly_name: Coach Screen Test
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: DEBUG
+  hardware_uart: UART0
+
+# I2C bus (HW-678A manual: SDA=GPIO41, SCL=GPIO42). scan:true lists every
+# device found at boot, which confirms the OLED is wired and its address.
+i2c:
+  sda: GPIO41
+  scl: GPIO42
+  scan: true
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_big
+    size: 22
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 12
+
+sensor:
+  - platform: uptime
+    id: uptime_s
+    update_interval: 1s
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 1s
+    lambda: |-
+      it.print(0, 0, id(font_big), "Coach FR");
+      it.print(0, 28, id(font_small), "OLED OK");
+      it.printf(0, 46, id(font_small), "uptime: %.0f s", id(uptime_s).state);

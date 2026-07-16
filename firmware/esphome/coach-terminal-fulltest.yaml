@@ -1,0 +1,153 @@
+# coach-terminal-fulltest.yaml — mic + screen + amp integrated bring-up test.
+#
+# Speaker now plays INTERMITTENTLY (a short beep every 10 s, plus a boot beep
+# and a wake-word beep) instead of sitting idle. Each beep starts and cleanly
+# stops the I2S, so the amp is only driven while playing.
+#
+# NOTE the wake word is "OKAY NABU" (stock model). Say "Okay Nabu", not "hello".
+# The custom "hello lingorm" model comes later (dev-kws).
+#
+# If a hiss remains BETWEEN beeps, that is the MAX98357 idle behaviour on your
+# breakout (SD held enabled). The clean fix is to gate the amp SD pin from a
+# GPIO — ask for the SD-mute version and wire MAX98357 SD -> GPIO2.
+#
+# Wiring: INMP441 VDD->3V3 GND->GND L/R->GND WS->4 SCK->5 SD->6
+#         SSD1306 VCC->3V3 GND->GND SCL->42 SDA->41
+#         MAX98357 Vin->5Vin GND->GND DIN->7 BCLK->15 LRC->16 + speaker
+# Flash: esphome run coach-terminal-fulltest.yaml --device /dev/ttyACM0
+
+esphome:
+  name: coach-fulltest
+  friendly_name: Coach Full Test
+  on_boot:
+    priority: -100
+    then:
+      - micro_wake_word.start:
+      - delay: 2s
+      - rtttl.play: "boot:d=8,o=5,b=120:c,e,g"
+
+globals:
+  - id: wake_count
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: state_txt
+    type: std::string
+    restore_value: false
+    initial_value: '"Listening..."'
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: DEBUG
+  hardware_uart: UART0
+
+i2c:
+  sda: GPIO41
+  scl: GPIO42
+  frequency: 400kHz
+
+i2s_audio:
+  - id: i2s_bus_mic
+    i2s_lrclk_pin: GPIO4
+    i2s_bclk_pin: GPIO5
+  - id: i2s_bus_amp
+    i2s_lrclk_pin: GPIO16
+    i2s_bclk_pin: GPIO15
+
+microphone:
+  - platform: i2s_audio
+    id: terminal_mic
+    i2s_audio_id: i2s_bus_mic
+    i2s_din_pin: GPIO6
+    adc_type: external
+    pdm: false
+    channel: left
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+speaker:
+  - platform: i2s_audio
+    id: terminal_speaker
+    i2s_audio_id: i2s_bus_amp
+    i2s_dout_pin: GPIO7
+    dac_type: external
+    sample_rate: 16000
+    channel: mono
+
+rtttl:
+  id: player
+  speaker: terminal_speaker
+
+# Intermittent test tone every 10 s so the amp is exercised, not left driving
+# noise. Between beeps the I2S stops on the speaker timeout.
+interval:
+  - interval: 10s
+    then:
+      - logger.log: "beep -- amp intermittent test"
+      - rtttl.play: "beep:d=8,o=6,b=140:c,g"
+
+micro_wake_word:
+  id: kws
+  microphone: terminal_mic
+  models:
+    - model: okay_nabu
+  on_wake_word_detected:
+    - lambda: |-
+        id(wake_count) += 1;
+        id(state_txt) = "DETECTED!";
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 0%
+        blue: 100%
+    - logger.log: "WAKE WORD DETECTED -- Okay Nabu heard!"
+    - rtttl.play: "ok:d=16,o=6,b=140:c,e,g"
+    - delay: 2s
+    - light.turn_off: status_led
+    - lambda: |-
+        id(state_txt) = "Listening...";
+    - micro_wake_word.start:
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_big
+    size: 20
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 12
+
+sensor:
+  - platform: uptime
+    id: uptime_s
+    update_interval: 1s
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 500ms
+    lambda: |-
+      it.print(0, 0, id(font_big), "Coach FR");
+      it.printf(0, 26, id(font_small), "%s", id(state_txt).c_str());
+      it.printf(0, 42, id(font_small), "wakes: %d", id(wake_count));
+      it.printf(0, 54, id(font_small), "up: %.0f s", id(uptime_s).state);
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO48
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    default_transition_length: 0s

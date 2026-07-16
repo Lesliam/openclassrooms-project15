@@ -1,0 +1,65 @@
+# coach-terminal-smoketest.yaml — minimal USB bring-up test.
+#
+# Purpose: prove OUR flashing toolchain + the board boots OUR code + 8MB octal
+# PSRAM initialises — with NO wifi / mic / amp / wake-word wired or configured.
+# This is the isolate-first step between "factory demo runs" and "wire modules".
+#
+# Flash + watch logs over USB (board on /dev/ttyACM0, COM Type-C port):
+#   cd project/firmware/esphome
+#   newgrp uucp            # once per shell, so /dev/ttyACM0 opens without sudo
+#   esphome run coach-terminal-smoketest.yaml --device /dev/ttyACM0
+#
+# PASS criteria (in the serial log):
+#   - boot reaches "ESPHome version 2026.5.3" and the main loop starts
+#   - a line showing PSRAM detected as ~8 MB (octal)
+#   - the "smoketest heartbeat" line prints every 2 s
+#   - the onboard RGB (GPIO48) blinks MAGENTA (our code) — not the factory pattern
+# First build downloads the ESP-IDF toolchain (several minutes) — expected once.
+
+esphome:
+  name: coach-smoketest
+  friendly_name: Coach Smoketest
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+# N16R8 = 8 MB octal PSRAM. Its detection in the boot log is part of the test.
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: DEBUG
+  # Route app logs to UART0 (= CH343 "COM" port, GPIO43/44) which is what we
+  # read on /dev/ttyACM0. Without this the S3 esp-idf console may default to
+  # USB-Serial-JTAG (the native-USB port), so app logs never reach the COM port
+  # even though the firmware is running (RGB blinks).
+  hardware_uart: UART0
+
+# Onboard WS2812 on GPIO48 (confirmed from the HW-678A manual + factory demo).
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO48
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    default_transition_length: 0s
+
+# Visible + logged heartbeat so a running board is unambiguous.
+interval:
+  - interval: 2s
+    then:
+      - light.turn_on:
+          id: status_led
+          red: 100%
+          green: 0%
+          blue: 100%
+      - delay: 1s
+      - light.turn_off: status_led
+      - logger.log: "smoketest heartbeat -- board alive, PSRAM ok, our firmware running"

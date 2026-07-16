@@ -146,6 +146,7 @@ voice_assistant:
         blue: 100%
   on_tts_start:
     - lambda: 'id(coach_state) = "Coach parle";'
+    - output.turn_on: amp_sd      # power the MAX98357 only while speaking
     - light.turn_on:
         id: status_led
         red: 0%
@@ -153,9 +154,11 @@ voice_assistant:
         blue: 0%
   on_end:
     - lambda: 'id(coach_state) = "Dites Okay Nabu";'
+    - output.turn_off: amp_sd     # shut the amp down at idle (no hiss)
     - light.turn_off: status_led
   on_error:
     - lambda: 'id(coach_state) = "Erreur";'
+    - output.turn_off: amp_sd
     - light.turn_on:
         id: status_led
         red: 100%
@@ -205,21 +208,15 @@ switch:
     optimistic: true
     # TODO: wire to micro_wake_word stop/start so mute actually disables KWS
 
-# --- OPTIONAL: amp idle-hiss mitigation via SD-pin gating -------------------
-# The MAX98357 breakout drives a faint idle hiss because its SD pin is held
-# enabled. The clean fix is to gate SD from a GPIO so the amp only powers up
-# while the coach is speaking. This is DISABLED by default because it requires
-# a physical rewire first: MAX98357 SD -> GPIO2 (and remove the SD pull-up on
-# the breakout so the GPIO fully controls it). If SD is NOT rewired, leaving
-# this block active would drive GPIO2 low and mute the amp permanently.
-#
-# To enable after rewiring SD -> GPIO2:
-#   1. Uncomment the output below.
-#   2. In voice_assistant: on_tts_start add `- output.turn_on: amp_sd`
-#      and on_end add `- output.turn_off: amp_sd`.
-#
-# output:
-#   - platform: gpio
-#     id: amp_sd
-#     pin: GPIO2
-#     # default state is OFF (amp shut down) -> only powered during TTS
+# --- amp idle-hiss mitigation via SD-pin gating (ENABLED) -------------------
+# MAX98357 SD is rewired to GPIO2 (confirmed 2026-07-16). The output defaults
+# OFF, so the amp is shut down at idle (no hiss); voice_assistant powers it up
+# on_tts_start and shuts it down on_end/on_error. If the first TTS is silent,
+# the SD-pin channel-select voltage may differ from the breakout default —
+# fall back to holding amp_sd ON (add `- output.turn_on: amp_sd` under on_boot)
+# and re-check audio.
+output:
+  - platform: gpio
+    id: amp_sd
+    pin: GPIO2
+    # default state is OFF (amp shut down) -> only powered during TTS

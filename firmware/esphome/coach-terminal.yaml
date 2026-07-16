@@ -65,6 +65,13 @@ logger:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # The target AP (Freebox) broadcasts a HIDDEN SSID. Scan-based association
+  # fails ("No networks found") and the device thrashes between reconnect
+  # phases. fast_connect skips the scan and associates directly to the
+  # configured SSID; power_save_mode:none stops the modem-sleep beacon misses
+  # that were causing 'Beacon Timeout' drops. (Fixes the 2026-07-16 wifi churn.)
+  fast_connect: true
+  power_save_mode: none
   ap:
     ssid: "Coach-Terminal Fallback"
     password: !secret fallback_ap_password

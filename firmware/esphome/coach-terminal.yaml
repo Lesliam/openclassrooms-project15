@@ -126,12 +126,14 @@ micro_wake_word:
   id: kws
   microphone: terminal_mic
   models:
-    # Placeholder official model for first bring-up:
+    # Bring-up model: stock, proven-good. Proves the wake -> pipeline path.
     - model: okay_nabu
-    # Custom model goes here once trained + quantized (dev-kws pipeline).
-    # micro_wake_word accepts a manifest JSON by local path, URL, or
-    # github:// shorthand (see docs). Example:
-    # - model: https://<host-or-repo>/coach_wakeword/manifest.json  # TODO(dev-kws)
+    # NEXT: swap in the custom "hello lingorm" model (CS-152, ml/kws/models/).
+    # ESPHome rejects a LOCAL manifest whose "model" is a bare filename
+    # ("Expected a file scheme or a URL scheme with host"); the tflite ref must
+    # be a file:// or http(s):// scheme. Options: (a) serve the manifest+tflite
+    # over a local http URL, or (b) reference the tflite via a file:// URL in a
+    # build-local manifest copy (keep the committed manifest scheme-clean).
   on_wake_word_detected:
     - voice_assistant.start:
 

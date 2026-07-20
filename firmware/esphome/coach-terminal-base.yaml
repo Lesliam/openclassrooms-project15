@@ -71,9 +71,11 @@ logger:
   hardware_uart: UART0
 
 wifi:
-  # Single network expressed as a networks: list so the BSSID can be pinned to
-  # the STRONG AP radio (-53 dB) and stop the roam churn to the weaker BSSID that
-  # drove the Beacon-Timeout drops. Comment the bssid line if that AP is removed.
+  # Single network expressed as a networks: list so the BSSID is pinned to the
+  # STRONG AP radio (-53 dB). NOTE (2026-07-20): the BSSID lock ALONE did not hold
+  # -- the device roamed to the weaker 22:22:80 BSSID anyway -- because ESPHome's
+  # post_connect_roaming (default true) actively re-roams after connecting. The
+  # post_connect_roaming: false below is what actually pins the radio.
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
@@ -82,11 +84,21 @@ wifi:
   # directly; power_save_mode:none stops the modem-sleep beacon misses.
   fast_connect: true
   power_save_mode: none
-  # Optional static IP (uncomment + CONFIRM your Freebox gateway before use — a
-  # wrong gateway makes the device unreachable, needing a serial re-flash):
+  # Stop ESPHome from roaming off the locked strong BSSID to the weaker AP after
+  # connect -- the direct fix for the 2026-07-20 "BSSID lock not honored" +
+  # ~30 s Beacon-Timeout churn. With roaming off it stays on the associated radio.
+  post_connect_roaming: false
+  # Drive the radio at max TX power (ESP32 range 8.5-20.5 dBm) to strengthen a
+  # marginal link and reduce Beacon Timeouts.
+  output_power: 20dB
+  # Optional static IP to skip the ~40 s cold-boot DHCP churn. Gateway
+  # 192.168.1.254 is CONFIRMED (from the connected log). Before uncommenting, pick
+  # a static_ip OUTSIDE the Freebox DHCP pool (or reserve it in the Freebox) so it
+  # cannot collide with a DHCP lease -- a wrong/colliding IP makes the device
+  # unreachable and needs a serial re-flash.
   # manual_ip:
-  #   static_ip: 192.168.1.75
-  #   gateway: 192.168.1.254    # <-- CONFIRM: your Freebox LAN gateway IP
+  #   static_ip: 192.168.1.75    # <-- pick/reserve a free IP before enabling
+  #   gateway: 192.168.1.254     # confirmed Freebox LAN gateway
   #   subnet: 255.255.255.0
   ap:
     ssid: "Coach-Terminal Fallback"

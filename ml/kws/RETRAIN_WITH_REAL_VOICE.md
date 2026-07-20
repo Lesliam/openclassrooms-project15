@@ -16,6 +16,52 @@ noise augmentation partially simulates channel variation, so this is a large,
 pragmatic improvement — not a perfect field match. If recall is still weak after
 this, the next step is capturing a few positives through the device mic itself.
 
+## Background-noise augmentation (do this — it is the biggest lever)
+
+Every positive clip used to train `hello_lingorm.tflite` so far (synthetic AND
+the real-voice batch from step 1 below) went through `Augmentation` with
+`AddBackgroundNoise` probability **0.0** and `background_paths=[]` — the model
+has never once seen its own wake phrase mixed with room noise (fan hum, TV,
+traffic, other people talking). It was trained and evaluated on clean/quiet
+audio only. On-device the ESP32 mic always picks up some ambient noise, so
+this is very likely a bigger contributor to the ~1/8 real-voice recall miss
+than accent/phonetics alone — fixing it costs one flag, not a re-recording
+session.
+
+A background-noise corpus is now available at
+`~/dev/coach-kws/data/background_noise/` (2000 clips, ESC-50, see
+provenance below). Both feature-extraction commands below now accept
+`--background-dir` — when passed, it sets `AddBackgroundNoise` probability
+to 0.75 (matching microWakeWord's own upstream default) and points
+`background_paths` at the corpus. **Regenerate BOTH the synthetic and the
+real-voice feature sets with this flag** — mixing a noise-augmented positive
+source with a clean one in the same training run would just teach the model
+inconsistent cues, so both must be regenerated together, not just the new
+real-voice batch.
+
+```bash
+cd ~/dev/coach-kws
+source .venv/bin/activate
+
+# Synthetic corpus (regenerate to add noise augmentation)
+python scripts/prepare_positive_features.py \
+  --positives-dir data/positives_hello_lingorm \
+  --impulse-dir   psg-src/piper_sample_generator/impulses \
+  --background-dir data/background_noise \
+  --output-dir    data/generated_augmented_features
+
+deactivate
+```
+
+Corpus provenance: **ESC-50** (Karol Piczak, `github.com/karolpiczak/ESC-50`),
+2000 five-second environmental-sound clips, CC BY-NC 3.0 license (fine for
+this non-commercial student project), downloaded from the official archive
+link `https://github.com/karoldvl/ESC-50/archive/master.zip` (~600 MB), then
+resampled to 16 kHz mono WAV (matching the pipeline's native rate) into a flat
+directory — 313 MB on disk. License + per-clip attribution copied to
+`data/background_noise_LICENSE.txt`, class metadata to
+`data/background_noise_esc50_meta.csv`.
+
 All heavy work happens in the training env `~/dev/coach-kws/` (59 GB, intact:
 51 GB kahrendt negatives, `data/positives_hello_lingorm`, augmented features,
 `trained_models/`, `scripts/`, `Dockerfile.train`, `training_parameters.yaml`).
@@ -59,12 +105,16 @@ source .venv/bin/activate
 python scripts/prepare_positive_features.py \
   --positives-dir data/positives_hello_lingorm_real \
   --impulse-dir   psg-src/piper_sample_generator/impulses \
+  --background-dir data/background_noise \
   --output-dir    data/generated_augmented_features_real
 deactivate
 ```
 
 This writes `training/`, `validation/`, `testing/` RaggedMmap spectrograms for
 the real corpus, same framing (10 ms step, 3.2 s window) as the synthetic set.
+`--background-dir` is included here to match the regenerated synthetic corpus
+above (see "Background-noise augmentation" section) — omit it from BOTH
+commands together if you decide to skip that improvement for this run.
 
 ### 3. Add the real corpus as a weighted positive source
 

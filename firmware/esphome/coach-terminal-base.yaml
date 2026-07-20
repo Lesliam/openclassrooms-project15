@@ -71,22 +71,23 @@ logger:
   hardware_uart: UART0
 
 wifi:
-  # Single network expressed as a networks: list so the BSSID is pinned to the
-  # STRONG AP radio (-53 dB). NOTE (2026-07-20): the BSSID lock ALONE did not hold
-  # -- the device roamed to the weaker 22:22:80 BSSID anyway -- because ESPHome's
-  # post_connect_roaming (default true) actively re-roams after connecting. The
-  # post_connect_roaming: false below is what actually pins the radio.
+  # Single HIDDEN network. Do NOT pin a bssid. A previous build locked
+  # bssid: 3A:07:16:8B:5F:74 (assumed the "strong" radio), but the on-device log
+  # (2026-07-20 14:05) showed that BSSID repeatedly failed the DIRECTED probe
+  # ("Probe Request Unsuccessful"), so the device burned ~40 s cycling
+  # scan -> RETRY_HIDDEN -> RESTART before falling back to "(any)" and associating
+  # to 3A:07:16:22:22:80 (ch 6, -57 dB, healthy). Locking to a BSSID that isn't
+  # answering IS the cold-boot churn -- so let ESPHome associate to whichever
+  # BSSID of the SSID actually responds; post_connect_roaming:false then keeps it.
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
-      bssid: 3A:07:16:8B:5F:74
-  # Freebox broadcasts a HIDDEN SSID: fast_connect skips the scan and associates
-  # directly; power_save_mode:none stops the modem-sleep beacon misses.
+  # Freebox broadcasts a HIDDEN SSID: fast_connect reuses the last good BSSID and
+  # skips a blind scan; power_save_mode:none stops the modem-sleep beacon misses.
   fast_connect: true
   power_save_mode: none
-  # Stop ESPHome from roaming off the locked strong BSSID to the weaker AP after
-  # connect -- the direct fix for the 2026-07-20 "BSSID lock not honored" +
-  # ~30 s Beacon-Timeout churn. With roaming off it stays on the associated radio.
+  # Once associated, do NOT roam to another BSSID -- pre-empts the roam churn that
+  # made earlier builds bounce between BSSIDs after connecting.
   post_connect_roaming: false
   # Drive the radio at max TX power (ESP32 range 8.5-20.5 dBm) to strengthen a
   # marginal link and reduce Beacon Timeouts.

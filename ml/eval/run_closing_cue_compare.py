@@ -50,6 +50,12 @@ CLASS_QUESTION = "question"
 # sentences (the system prompt caps normal turns at 2-3, corrections at 4).
 WARM_CLOSE_MAX_SENTENCES = 3
 
+# D4 uses greedy decoding (temperature 0) so the v1-vs-v2 comparison is
+# reproducible from a single run; the frozen harness samples (temperature 0.7)
+# because it is exploratory and averages over repetitions, which this focused
+# behavioural comparison does not.
+D4_TEMPERATURE = 0.0
+
 # Prompt files (deployment artifacts) live under project/server. v0 is frozen
 # and is NOT used here; D4 compares the two deployment prompts v1 and v2.
 V1_PROMPT_FILE = constants.SERVER_DIR / "coach_system_prompt_v1.md"
@@ -86,6 +92,13 @@ _REPEAT_DRILL = re.compile(r"r[ée]p[ée]t\w*[^.?!]{0,40}phrase", re.IGNORECASE)
 
 
 # --- Deterministic detectors (CPU-only, no Ollama) --------------------------
+#
+# The detectors are deliberately conservative: `is_warm_close` REQUIRES an
+# explicit farewell cue, and `reply_ends_with_question` makes a terminal "?"
+# always count as a question (it wins over any farewell cue). The bias is one
+# directional: a genuine close phrased without a recognised cue is scored as
+# `soft`, not `closed`. So the detectors can only UNDER-credit closer-recall,
+# never inflate the premature-close rate (the headline safety number).
 
 
 def reply_ends_with_question(text: str) -> bool:
@@ -200,6 +213,11 @@ DIALOGUES: tuple[Dialogue, ...] = (
         "Mon projet parle d'un assistant vocal pour apprendre le français.",
     ),
     Dialogue("D6", LABEL_DEFAUT, "Je travaille sur mon portfolio depuis deux semaines."),
+    Dialogue(
+        "D7",
+        LABEL_DEFAUT,
+        "Je suis fatiguée aujourd'hui, j'ai mal dormi mais je veux continuer.",
+    ),
 )
 
 
@@ -412,8 +430,10 @@ def main() -> None:
     args = parser.parse_args()
 
     out_dir = args.out_root / "closing-cue-d4"
+    # Greedy decoding (D4_TEMPERATURE=0) for a deterministic, reproducible
+    # v1-vs-v2 comparison; top_p/seed/num_ctx follow the harness convention.
     decode = DecodeOptions(
-        temperature=constants.DECODE_TEMPERATURE,
+        temperature=D4_TEMPERATURE,
         top_p=constants.DECODE_TOP_P,
         seed=constants.DECODE_SEED_BASE,
         num_ctx=constants.DECODE_NUM_CTX,

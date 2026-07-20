@@ -45,10 +45,12 @@ The dimension is named **D4** because `eval_set_v0.md` already uses D3 for
 long-context drift. The mini-eval (`closing_cue_set_v1.md` +
 `run_closing_cue_compare.py`) is deliberately separate from the frozen harness.
 
-- 20 single-turn labelled dialogues: 7 CLOTURE, 7 SOUPLE, 6 DEFAUT, including
+- 21 single-turn labelled dialogues: 7 CLOTURE, 7 SOUPLE, 7 DEFAUT, including
   the near-misses « merci » alone (SOUPLE, must stay open) vs « merci, à demain »
-  (CLOTURE, must close) and « je dois réfléchir à ma réponse » (DEFAUT — a
-  thinking pause, not a stop).
+  (CLOTURE, must close), « je dois réfléchir à ma réponse » (DEFAUT — a thinking
+  pause, not a stop), and « je suis fatiguée aujourd'hui... mais je veux
+  continuer » (DEFAUT — bare fatigue without a stop cue must NOT close, vs
+  « je suis fatiguée, je dois y aller » which does).
 - Deterministic CPU scorers (no Ollama): `reply_ends_with_question`,
   `is_warm_close` (short, no trailing question, no repeat-drill, explicit
   farewell cue) and `classify_reply` → `{closed, soft, question}`.
@@ -70,16 +72,16 @@ correctly closed) toward 1.0 while keeping premature-close rate at 0.0.
 
 ## Results — v1 vs v2
 
-Live run: `qwen2.5:14b` via Ollama, both arms on the same 20 dialogues, same
-decode (temperature 0.7, top_p 0.9, seed 42, num_ctx 8192). Artifact:
-`runs/closing-cue-d4/results.json`.
+Live run: `qwen2.5:14b` via Ollama, both arms on the same 21 dialogues, greedy
+decode for reproducibility (temperature 0 / greedy, top_p 0.9, seed 42,
+num_ctx 8192). Artifact: `runs/closing-cue-d4/results.json`.
 
 | Metric | v1 | v2 |
 |--------|----|----|
-| Overall accuracy | 0.750 | 1.000 |
-| **closer-recall** (CLOTURE closed) | **0.286** | **1.000** |
+| Overall accuracy | 0.667 | 1.000 |
+| **closer-recall** (CLOTURE closed) | **0.000** | **1.000** |
 | **premature-close rate** (non-CLOTURE wrongly closed) | **0.000** | **0.000** |
-| CLOTURE accuracy | 0.286 | 1.000 |
+| CLOTURE accuracy | 0.000 | 1.000 |
 | SOUPLE accuracy | 1.000 | 1.000 |
 | DEFAUT accuracy | 1.000 | 1.000 |
 
@@ -89,17 +91,17 @@ Per-dialogue classification (`ok` = matches the expected behaviour):
 |----|-------|----|----|--------------|
 | C1 | CLOTURE | question X | closed ok | Au revoir. |
 | C2 | CLOTURE | question X | closed ok | Bonne nuit. |
-| C3 | CLOTURE | question X | closed ok | Je suis fatiguée, je dois y aller. |
-| C4 | CLOTURE | closed ok | closed ok | Merci, à demain. |
+| C3 | CLOTURE | soft X | closed ok | Je suis fatiguée, je dois y aller. |
+| C4 | CLOTURE | soft X | closed ok | Merci, à demain. |
 | C5 | CLOTURE | question X | closed ok | On s'arrête là pour aujourd'hui. |
-| C6 | CLOTURE | closed ok | closed ok | On continue demain, bonne soirée. |
+| C6 | CLOTURE | soft X | closed ok | On continue demain, bonne soirée. |
 | C7 | CLOTURE | soft X | closed ok | C'est bon j'arrête, merci beaucoup. |
-| S1 | SOUPLE | question ok | soft ok | Comment on dit "thank you" en français ? |
+| S1 | SOUPLE | question ok | question ok | Comment on dit "thank you" en français ? |
 | S2 | SOUPLE | question ok | question ok | C'est quoi la différence entre "savoir" et "connaître" ? |
 | S3 | SOUPLE | question ok | question ok | Parle plus lentement, s'il te plaît. |
-| S4 | SOUPLE | question ok | question ok | Répète, je n'ai pas bien compris. |
+| S4 | SOUPLE | soft ok | soft ok | Répète, je n'ai pas bien compris. |
 | S5 | SOUPLE | question ok | question ok | C'est trop dur, je n'y arrive pas. |
-| S6 | SOUPLE | soft ok | question ok | Je suis découragée, j'en ai marre. |
+| S6 | SOUPLE | soft ok | soft ok | Je suis découragée, j'en ai marre. |
 | S7 | SOUPLE | soft ok | question ok | Merci beaucoup ! |
 | D1 | DEFAUT | question ok | question ok | Bonjour, je m'appelle Marie et je prépare ma soutenance. |
 | D2 | DEFAUT | question ok | question ok | Je pense que mon projet est vraiment intéressant. |
@@ -107,23 +109,33 @@ Per-dialogue classification (`ok` = matches the expected behaviour):
 | D4 | DEFAUT | question ok | question ok | Hier, je suis allée au marché et j'ai acheté des légumes. |
 | D5 | DEFAUT | question ok | question ok | Mon projet parle d'un assistant vocal pour apprendre le français. |
 | D6 | DEFAUT | question ok | question ok | Je travaille sur mon portfolio depuis deux semaines. |
+| D7 | DEFAUT | question ok | question ok | Je suis fatiguée aujourd'hui, j'ai mal dormi mais je veux continuer. |
 
 Example (C2 « Bonne nuit. »):
 
-- v1: « Bonne nuit ! Repose-toi bien et prépare-toi pour demain. As-tu déjà
-  pensé au début de ta présentation ? » → forced question (the exact bug).
-- v2: « Bonne nuit ! Repose-toi bien. À la prochaine fois. » → warm close, no
-  question.
+- v1: « Bonne nuit ! Es-tu prête pour ta soutenance demain ? Tu veux peut-être
+  faire une simulation avant ? » → forced question (the exact bug).
+- v2: « Bonne nuit ! Repose-toi bien. À bientôt pour de nouvelles
+  conversations. » → warm close, no question.
+
+Example (D7, bare fatigue as ordinary content, the CS-156 round-2 hole):
+
+- v1: « D'accord, prenons les choses étape par étape... Que ressens-tu comme
+  principaux défis ? » → relance (question), correct.
+- v2: « D'accord, on peut continuer doucement alors... Quel est le problème
+  principal que tu essaies de résoudre ? » → relance (question), correct — the
+  qualified fatigue trigger keeps bare fatigue in DÉFAUT rather than closing.
 
 ## Reading
 
-v1 closes only 2 of 7 farewells (closer-recall 0.286); it forces a question on
-« au revoir », « bonne nuit », « je suis fatiguée »… v2 closes all 7
-(closer-recall 1.000) while premature-close rate stays 0.000 and DEFAUT
+Under greedy decoding v1 closes 0 of 7 farewells (closer-recall 0.000); it
+forces a question or a non-closing acknowledgement on « au revoir »,
+« bonne nuit », « merci, à demain »… never actually saying goodbye. v2 closes
+all 7 (closer-recall 1.000) while premature-close rate stays 0.000 and DEFAUT
 accuracy stays 1.000 — the exception did NOT bleed into ordinary practice
-turns. SOUPLE stays at 1.000 on both arms (the model already never hung up on a
-need); v2 additionally makes the closing behaviour correct, which was the whole
-point of CS-156.
+turns, including the bare-fatigue near-miss D7. SOUPLE stays at 1.000 on both
+arms (the model already never hung up on a need); v2 additionally makes the
+closing behaviour correct, which was the whole point of CS-156.
 
 ## Reproduce
 

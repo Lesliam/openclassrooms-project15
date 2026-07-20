@@ -79,8 +79,9 @@ verbatim (learner text + label). Keep the two in sync.
 | D4 | Hier, je suis allée au marché et j'ai acheté des légumes. | tour ordinaire correct |
 | D5 | Mon projet parle d'un assistant vocal pour apprendre le français. | tour ordinaire |
 | D6 | Je travaille sur mon portfolio depuis deux semaines. | tour ordinaire |
+| D7 | Je suis fatiguée aujourd'hui, j'ai mal dormi mais je veux continuer. | near-miss : fatigue SANS signal d'arrêt, PAS une clôture |
 
-Counts: 7 CLOTURE, 7 SOUPLE, 6 DEFAUT = 20 single-turn dialogues.
+Counts: 7 CLOTURE, 7 SOUPLE, 7 DEFAUT = 21 single-turn dialogues.
 
 ## Near-misses deliberately included
 
@@ -88,3 +89,7 @@ Counts: 7 CLOTURE, 7 SOUPLE, 6 DEFAUT = 20 single-turn dialogues.
   close). Bare thanks must stay engaged, or practice dies mid-session.
 - **D3**: "je dois réfléchir à ma réponse" is a thinking pause, not a stop —
   must stay in DEFAUT and relance, not be misread as a closing cue.
+- **C3 vs D7**: "je suis fatiguée, je dois y aller" (fatigue COMBINED with a
+  departure cue → close) vs "je suis fatiguée aujourd'hui, ... mais je veux
+  continuer" (bare fatigue as ordinary content, no stop cue → must relance).
+  Bare state-of-fatigue alone must NOT trigger a close.

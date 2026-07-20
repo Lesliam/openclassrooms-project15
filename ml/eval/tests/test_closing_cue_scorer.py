@@ -164,7 +164,7 @@ def test_compute_metrics_ignores_unscored_records() -> None:
 
 def test_dialogue_set_counts_match_spec() -> None:
     labels = [d.label for d in d4.DIALOGUES]
-    assert len(labels) == 20
+    assert len(labels) == 21
     assert labels.count(d4.LABEL_CLOTURE) == 7
     assert labels.count(d4.LABEL_SOUPLE) == 7
-    assert labels.count(d4.LABEL_DEFAUT) == 6
+    assert labels.count(d4.LABEL_DEFAUT) == 7

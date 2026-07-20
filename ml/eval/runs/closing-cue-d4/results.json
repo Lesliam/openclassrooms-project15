@@ -1,0 +1,400 @@
+{
+  "dimension": "D4",
+  "generated_at": "2026-07-20T20:40:07.964783+00:00",
+  "ollama_reachable": true,
+  "model": "qwen2.5:14b",
+  "arms": {
+    "v1": {
+      "records": [
+        {
+          "id": "C1",
+          "label": "CLOTURE",
+          "learner_text": "Au revoir.",
+          "reply": "Au revoir ! N'hésite pas à revenir si tu as besoin de pratiquer davantage. Es-tu satisfaite des points que nous avons abordés aujourd'hui ?",
+          "classification": "question",
+          "correct": false,
+          "error": null
+        },
+        {
+          "id": "C2",
+          "label": "CLOTURE",
+          "learner_text": "Bonne nuit.",
+          "reply": "Bonne nuit ! Repose-toi bien et prépare-toi pour demain. As-tu déjà pensé au début de ta présentation ?",
+          "classification": "question",
+          "correct": false,
+          "error": null
+        },
+        {
+          "id": "C3",
+          "label": "CLOTURE",
+          "learner_text": "Je suis fatiguée, je dois y aller.",
+          "reply": "D'accord, prenons une petite pause alors. Tu as bien travaillé aujourd'hui. Veux-tu reprendre là où tu t'es arrêtée demain ?",
+          "classification": "question",
+          "correct": false,
+          "error": null
+        },
+        {
+          "id": "C4",
+          "label": "CLOTURE",
+          "learner_text": "Merci, à demain.",
+          "reply": "Bien sûr, passez une bonne journée ! N'hésitez pas si vous avez besoin de quelque chose avant demain. À demain pour continuer notre travail.",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C5",
+          "label": "CLOTURE",
+          "learner_text": "On s'arrête là pour aujourd'hui.",
+          "reply": "D'accord, c'est bien que tu décides de prendre une pause. Tu as travaillé dur aujourd'hui. Veux-tu reprendre demain ou préfères-tu avoir un jour de repos ?",
+          "classification": "question",
+          "correct": false,
+          "error": null
+        },
+        {
+          "id": "C6",
+          "label": "CLOTURE",
+          "learner_text": "On continue demain, bonne soirée.",
+          "reply": "Bonne soirée ! On reprend quand tu veux demain. Repose-toi bien.",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C7",
+          "label": "CLOTURE",
+          "learner_text": "C'est bon j'arrête, merci beaucoup.",
+          "reply": "Très bien ! Tu as travaillé dur aujourd'hui. Repose-toi bien et n'hésite pas à reprendre quand tu le souhaites. À bientôt !",
+          "classification": "soft",
+          "correct": false,
+          "error": null
+        },
+        {
+          "id": "S1",
+          "label": "SOUPLE",
+          "learner_text": "Comment on dit \"thank you\" en français ?",
+          "reply": "On dit \"merci\" en français. Tu peux utiliser \"merci beaucoup\" pour exprimer ta gratitude de manière plus emphatique. Par exemple, si quelqu'un t'aide, tu dis simplement : \"Merci !\" Ou bien : \"Je te remercie.\" Si c'est vraiment important pour toi, tu peux dire : \"Un grand merci !\"\n\nQuel autre mot ou expression aimerais-tu apprendre ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S2",
+          "label": "SOUPLE",
+          "learner_text": "C'est quoi la différence entre \"savoir\" et \"connaître\" ?",
+          "reply": "\"Savoir\" est utilisé quand tu as des informations ou que tu connais des faits, comme des données, des dates ou des règles. Par exemple, \"Je sais que Paris est la capitale de France.\"\n\n\"Connaître\", en revanche, c'est plus à propos d'avoir une familiarité avec quelque chose ou quelqu'un. C'est aussi utilisé quand tu as appris comment faire quelque chose. Par exemple, \"Je connais bien mon patron.\" ou \"Je connais le français.\"\n\nAs-tu des exemples où tu as du mal à choisir entre ces deux verbes ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S3",
+          "label": "SOUPLE",
+          "learner_text": "Parle plus lentement, s'il te plaît.",
+          "reply": "Bien sûr, je vais ralentir mon rythme de parole pour que tu puisses mieux suivre. Tu te sens mieux comme ça ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S4",
+          "label": "SOUPLE",
+          "learner_text": "Répète, je n'ai pas bien compris.",
+          "reply": "Tu as dit : « Répète, je n'ai pas bien compris. » On dit plutôt : « Pardon, je n'ai pas bien compris, peux-tu répéter ? » Cela montre poliment que tu n'as pas capté et demande de reformuler. Peux-tu dire : « Pardon, je n'ai pas bien compris, peux-tu répéter ? »",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S5",
+          "label": "SOUPLE",
+          "learner_text": "C'est trop dur, je n'y arrive pas.",
+          "reply": "Je comprends que tu puisses te sentir dépassée, mais rappelle-toi qu'avec de la pratique régulière, tout devient plus facile. Quel est le point précis où tu bloques en ce moment ? Peut-être pourrais-tu me dire quel aspect du projet ou quelle partie des entretiens te pose problème ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S6",
+          "label": "SOUPLE",
+          "learner_text": "Je suis découragée, j'en ai marre.",
+          "reply": "C'est normal de se sentir découragée parfois. Qu'est-ce qui te fatigue le plus en ce moment ? Parlons de ce qui te bloque pour que tu puisses y voir plus clair.",
+          "classification": "soft",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S7",
+          "label": "SOUPLE",
+          "learner_text": "Merci beaucoup !",
+          "reply": "De rien ! Tu es prête pour ta simulation de soutenance ? On peut commencer quand tu le souhaites.",
+          "classification": "soft",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D1",
+          "label": "DEFAUT",
+          "learner_text": "Bonjour, je m'appelle Marie et je prépare ma soutenance.",
+          "reply": "Enchantée Marie ! Comment vas-tu aujourd'hui ? Quels sont les points sur lesquels tu aimerais travailler en particulier pour ta soutenance ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D2",
+          "label": "DEFAUT",
+          "learner_text": "Je pense que mon projet est vraiment intéressant.",
+          "reply": "C'est super positif ! Pourquoi penses-tu que ton projet est intéressant ? Comment ça pourrait-il apporter de la valeur à tes futurs employeurs ou à tes collègues ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D3",
+          "label": "DEFAUT",
+          "learner_text": "Je dois réfléchir à ma réponse.",
+          "reply": "Prends tout ton temps pour y réfléchir. Quelle est la question que Charlotte t'a posée ? Peut-être peux-tu commencer par reformuler la question ou en expliquer le contexte ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D4",
+          "label": "DEFAUT",
+          "learner_text": "Hier, je suis allée au marché et j'ai acheté des légumes.",
+          "reply": "C'est génial ! Quels types de légumes as-tu pris ? As-tu fait d'autres courses intéressantes ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D5",
+          "label": "DEFAUT",
+          "learner_text": "Mon projet parle d'un assistant vocal pour apprendre le français.",
+          "reply": "C'est une excellente idée ! Pour qui est ce assistant vocal destiné exactement ? Et quel problème essaies-tu de résoudre avec ce projet ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D6",
+          "label": "DEFAUT",
+          "learner_text": "Je travaille sur mon portfolio depuis deux semaines.",
+          "reply": "Bien ! Tu as commencé ton portfolio il y a deux semaines. Quels sont tes objectifs pour les prochains jours ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        }
+      ],
+      "metrics": {
+        "n_items": 20,
+        "n_scored": 20,
+        "accuracy": 0.75,
+        "closer_recall": 0.2857142857142857,
+        "premature_close_rate": 0.0,
+        "per_label_accuracy": {
+          "CLOTURE": 0.2857142857142857,
+          "SOUPLE": 1.0,
+          "DEFAUT": 1.0
+        }
+      }
+    },
+    "v2": {
+      "records": [
+        {
+          "id": "C1",
+          "label": "CLOTURE",
+          "learner_text": "Au revoir.",
+          "reply": "Au revoir ! Repose-toi bien. À bientôt pour de nouvelles conversations.",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C2",
+          "label": "CLOTURE",
+          "learner_text": "Bonne nuit.",
+          "reply": "Bonne nuit ! Repose-toi bien. À la prochaine fois.",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C3",
+          "label": "CLOTURE",
+          "learner_text": "Je suis fatiguée, je dois y aller.",
+          "reply": "D'accord, prends bien soin de toi. Repose-toi bien, on se retrouve la prochaine fois pour continuer. Bonne soirée !",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C4",
+          "label": "CLOTURE",
+          "learner_text": "Merci, à demain.",
+          "reply": "Très bien, bonne nuit ! À demain. Repose-toi bien.",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C5",
+          "label": "CLOTURE",
+          "learner_text": "On s'arrête là pour aujourd'hui.",
+          "reply": "D'accord, on peut arrêter pour aujourd'hui. Repose-toi bien et à demain !",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C6",
+          "label": "CLOTURE",
+          "learner_text": "On continue demain, bonne soirée.",
+          "reply": "Repose-toi bien, on se retrouve demain pour continuer. Bonne soirée !",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "C7",
+          "label": "CLOTURE",
+          "learner_text": "C'est bon j'arrête, merci beaucoup.",
+          "reply": "Repasse quand tu veux, prends soin de toi !",
+          "classification": "closed",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S1",
+          "label": "SOUPLE",
+          "learner_text": "Comment on dit \"thank you\" en français ?",
+          "reply": "\"On dit plutôt : 'merci'. C'est la façon courante de remercier quelqu'un en français. Dis-le-moi encore une fois s'il te plaît.()\"",
+          "classification": "soft",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S2",
+          "label": "SOUPLE",
+          "learner_text": "C'est quoi la différence entre \"savoir\" et \"connaître\" ?",
+          "reply": "La différence entre \"savoir\" et \"connaître\" est importante en français. On utilise \"savoir\" pour parler d'un fait ou d'une information que l'on détient, par exemple : \"Je sais qu'il pleut.\" Alors que \"connaître\" s'emploie quand on parle de familiarité avec une personne, un lieu, ou un sujet plus large comme un langage ou une ville : \"Je connais bien Paris.\" Tu as besoin d'autres exemples ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S3",
+          "label": "SOUPLE",
+          "learner_text": "Parle plus lentement, s'il te plaît.",
+          "reply": "Bien sûr, je vais parler plus lentement. Que veux-tu que nous travaillions maintenant ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S4",
+          "label": "SOUPLE",
+          "learner_text": "Répète, je n'ai pas bien compris.",
+          "reply": "Pardon, tu as dit que tu n'as pas compris quelque chose ? Pourrais-tu reformuler ou préciser ce que tu aimerais que j'explique à nouveau ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S5",
+          "label": "SOUPLE",
+          "learner_text": "C'est trop dur, je n'y arrive pas.",
+          "reply": "Je comprends que ça peut être difficile par moments, mais tu progresses chaque jour. Veux-tu reprendre doucement depuis le début ou concentrer sur un point spécifique qui te pose problème ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S6",
+          "label": "SOUPLE",
+          "learner_text": "Je suis découragée, j'en ai marre.",
+          "reply": "Ne t'inquiète pas, c'est tout à fait normal de ressentir ça parfois. Tu progresses bien, il faut juste que tu prennes du recul et que tu recharges tes batteries. On peut continuer si tu veux, mais on peut aussi prendre une petite pause pour se recentrer ensuite. Que préfères-tu ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "S7",
+          "label": "SOUPLE",
+          "learner_text": "Merci beaucoup !",
+          "reply": "De rien, contente de pouvoir t'aider. Dis-moi, as-tu des points spécifiques sur lesquels tu aimerais travailler aujourd'hui ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D1",
+          "label": "DEFAUT",
+          "learner_text": "Bonjour, je m'appelle Marie et je prépare ma soutenance.",
+          "reply": "Bonjour Marie ! Ravi de pouvoir t'aider pour ta soutenance. Quel est le sujet de ton projet ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D2",
+          "label": "DEFAUT",
+          "learner_text": "Je pense que mon projet est vraiment intéressant.",
+          "reply": "C'est super de penser que ton projet est intéressant ! Pourquoi penses-tu que d'autres pourraient être intéressés par ton travail ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D3",
+          "label": "DEFAUT",
+          "learner_text": "Je dois réfléchir à ma réponse.",
+          "reply": "Prends tout le temps qu'il te faut pour réfléchir. Quelle est la prochaine question ou point sur lequel tu aimerais travailler ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D4",
+          "label": "DEFAUT",
+          "learner_text": "Hier, je suis allée au marché et j'ai acheté des légumes.",
+          "reply": "C'est génial ! Quels types de légumes as-tu achetés ? Tu prépares quoi avec eux cette semaine ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D5",
+          "label": "DEFAUT",
+          "learner_text": "Mon projet parle d'un assistant vocal pour apprendre le français.",
+          "reply": "Très bien ! Pourrais-tu me dire quel est le problème que tu essaies de résoudre avec cet assistant vocal ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        },
+        {
+          "id": "D6",
+          "label": "DEFAUT",
+          "learner_text": "Je travaille sur mon portfolio depuis deux semaines.",
+          "reply": "C'est bien ! Tu as déjà avancé pendant deux semaines. Quels sont les principaux éléments que tu as ajoutés récemment dans ton portfolio ?",
+          "classification": "question",
+          "correct": true,
+          "error": null
+        }
+      ],
+      "metrics": {
+        "n_items": 20,
+        "n_scored": 20,
+        "accuracy": 1.0,
+        "closer_recall": 1.0,
+        "premature_close_rate": 0.0,
+        "per_label_accuracy": {
+          "CLOTURE": 1.0,
+          "SOUPLE": 1.0,
+          "DEFAUT": 1.0
+        }
+      }
+    }
+  }
+}

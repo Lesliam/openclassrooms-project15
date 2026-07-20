@@ -14,7 +14,6 @@ augmentation uses the impulse responses bundled with piper-sample-generator.
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
 from typing import Dict, List, Optional
 

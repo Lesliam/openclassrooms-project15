@@ -1,0 +1,289 @@
+# coach-terminal-base.yaml — SHARED base for the Coach FR voice terminal.
+#
+# This holds everything EXCEPT the display component: the ESP32-S3 hardware,
+# wifi/api/ota, the I2S audio in/out, the on-device wake word, and the
+# voice_assistant pipeline WITH the UI state machine. Two front-ends include
+# this via `packages:` and add only their own `display:`:
+#   - coach-terminal-faces-drawn.yaml   (procedural face, drawn by lambda)
+#   - coach-terminal-faces-bitmap.yaml  (1-bit bitmap face frames)
+# They are A/B comparison builds; after picking one on-device, fold the winner
+# back into coach-terminal.yaml and drop the experiment files.
+#
+# UI state machine (int global `ui_state`), driven by the voice_assistant
+# events below. The display lambda in each front-end renders one face per value:
+#   0 = boot / not ready   -> text screen "Demarrage..."
+#   1 = idle / ready        -> neutral face (wake word listening)
+#   2 = listening           -> attentive face (recording your speech)
+#   3 = thinking            -> LLM running (STT done, TTS not yet)
+#   4 = talking             -> coach speaking (TTS playback)
+#   5 = error / HA drop     -> text screen (diagnostic) "Erreur" / "Connexion HA..."
+# Faces show ONLY in the happy path (1-4); boot (0) and error (5) always fall
+# back to the text screen so a fault is never hidden behind a happy face.
+#
+# Hardware (validated 2026-07-16 on HW-678A): I2S mic WS=4/SCK=5/SD=6, I2S amp
+# DIN=7/BCLK=15/LRC=16, SSD1306 I2C SDA=41/SCL=42 @ 0x3C, RGB GPIO48, amp SD
+# gated on GPIO2. Populate secrets.yaml (cp from the .example) before flashing.
+
+substitutions:
+  name: coach-terminal
+  friendly_name: Coach Terminal
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  # Start the on-device wake word as soon as the device boots, DECOUPLED from the
+  # HA connection, so wifi/HA drops do not leave the terminal deaf. priority -100
+  # runs late in boot, after the microphone/PSRAM components are initialized.
+  on_boot:
+    priority: -100
+    then:
+      - micro_wake_word.start:
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+# N16R8 = 8 MB octal PSRAM. Required for micro_wake_word model + audio buffers.
+psram:
+  mode: octal
+  speed: 80MHz
+
+globals:
+  # Text shown on the boot/error screen (states 0 and 5).
+  - id: coach_state
+    type: std::string
+    restore_value: false
+    initial_value: '"Demarrage..."'
+  # Face state machine. See the header table for the 0-5 mapping.
+  - id: ui_state
+    type: int
+    restore_value: false
+    initial_value: '0'
+
+logger:
+  level: DEBUG
+  # On the ESP32-S3 (esp-idf) the default logger UART is the native USB-JTAG
+  # peripheral; app logs then never reach the CH343 USB-UART used for flashing.
+  # Pin the logger to UART0 so logs come out the CH343. (Validated 2026-07-16.)
+  hardware_uart: UART0
+
+wifi:
+  # Single network expressed as a networks: list so the BSSID can be pinned to
+  # the STRONG AP radio (-53 dB) and stop the roam churn to the weaker BSSID that
+  # drove the Beacon-Timeout drops. Comment the bssid line if that AP is removed.
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+      bssid: 3A:07:16:8B:5F:74
+  # Freebox broadcasts a HIDDEN SSID: fast_connect skips the scan and associates
+  # directly; power_save_mode:none stops the modem-sleep beacon misses.
+  fast_connect: true
+  power_save_mode: none
+  # Optional static IP (uncomment + CONFIRM your Freebox gateway before use — a
+  # wrong gateway makes the device unreachable, needing a serial re-flash):
+  # manual_ip:
+  #   static_ip: 192.168.1.75
+  #   gateway: 192.168.1.254    # <-- CONFIRM: your Freebox LAN gateway IP
+  #   subnet: 255.255.255.0
+  ap:
+    ssid: "Coach-Terminal Fallback"
+    password: !secret fallback_ap_password
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# I2C bus for the SSD1306 OLED (SDA=41, SCL=42, addr 0x3C).
+i2c:
+  sda: GPIO41
+  scl: GPIO42
+  frequency: 400kHz
+
+# Two independent I2S buses (S3 has two I2S peripherals): mic RX + amp TX.
+i2s_audio:
+  - id: i2s_bus_mic
+    i2s_lrclk_pin: GPIO4   # INMP441 WS
+    i2s_bclk_pin: GPIO5    # INMP441 SCK
+  - id: i2s_bus_amp
+    i2s_lrclk_pin: GPIO16  # MAX98357 LRC (HW-678A vendor pin)
+    i2s_bclk_pin: GPIO15   # MAX98357 BCLK
+
+microphone:
+  - platform: i2s_audio
+    id: terminal_mic
+    i2s_audio_id: i2s_bus_mic
+    i2s_din_pin: GPIO6     # INMP441 SD
+    adc_type: external
+    pdm: false
+    channel: left          # requires L/R pin tied to GND on the module
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+speaker:
+  - platform: i2s_audio
+    id: terminal_speaker
+    i2s_audio_id: i2s_bus_amp
+    i2s_dout_pin: GPIO7    # MAX98357 DIN
+    dac_type: external
+    sample_rate: 16000
+    channel: mono
+
+micro_wake_word:
+  id: kws
+  microphone: terminal_mic
+  models:
+    # Custom project wake word "hello lingorm" (CS-152). SINGLE model only —
+    # two models overran the S3 real-time KWS budget and broke both.
+    - model: ../../ml/kws/models/hello_lingorm.json
+  on_wake_word_detected:
+    - voice_assistant.start:
+
+voice_assistant:
+  id: va
+  microphone: terminal_mic
+  speaker: terminal_speaker
+  use_wake_word: false     # wake word runs on-device via micro_wake_word
+  noise_suppression_level: 2
+  auto_gain: 31dBFS
+  volume_multiplier: 2.0
+  # micro_wake_word starts on esphome.on_boot and runs independently of HA. It
+  # self-stops on every detection (stop_after_detection, to free the mic for the
+  # turn); the `interval:` safety-net below is the SINGLE owner that restarts it
+  # whenever the pipeline is idle and the wake word is stopped. That covers the
+  # clean turn-end, the error path, AND a mid-turn wifi/HA drop which used to
+  # orphan it in STOPPED -> device permanently deaf until reboot (bug #0). The
+  # per-event `micro_wake_word.start` calls were removed so there is exactly one
+  # owner (no double-management "already running" warnings, no KWS during TTS).
+  on_client_connected:
+    # HA (re)connected -> ready. Face goes to idle; text screen would show ready.
+    - lambda: |-
+        id(ui_state) = 1;
+        id(coach_state) = "Dites hello lingorm";
+  on_client_disconnected:
+    # Lost HA (incl. a wifi drop). Do NOT stop the wake word. Face -> error text.
+    - lambda: |-
+        id(ui_state) = 5;
+        id(coach_state) = "Connexion HA...";
+  on_listening:
+    # Recording the user's speech.
+    - lambda: 'id(ui_state) = 2;'
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 0%
+        blue: 100%
+  on_stt_end:
+    # Speech transcribed, LLM about to run -> "thinking" until TTS starts.
+    - lambda: 'id(ui_state) = 3;'
+  on_tts_start:
+    # Coach response ready -> speaking.
+    - lambda: |-
+        id(ui_state) = 4;
+        id(coach_state) = "Coach parle";
+    - output.turn_on: amp_sd     # power the MAX98357 before playback begins
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 100%
+        blue: 0%
+  on_tts_stream_start:
+    - output.turn_on: amp_sd
+  on_tts_stream_end:
+    - output.turn_off: amp_sd    # amp off only after playback completes (no hiss)
+    - lambda: |-
+        id(ui_state) = 1;
+        id(coach_state) = "Dites hello lingorm";
+    # Wake-word restart is owned by the interval: safety-net (see below), so it
+    # fires on EVERY path, not only this happy-path event.
+  on_end:
+    - light.turn_off: status_led
+    # A no-response turn (nothing playing) returns straight to idle; a normal TTS
+    # turn fires on_end mid-playback and the idle transition happens at
+    # on_tts_stream_end. Wake-word restart is owned solely by the interval below.
+    - if:
+        condition:
+          not:
+            speaker.is_playing: terminal_speaker
+        then:
+          - lambda: 'id(ui_state) = 1;'
+  on_error:
+    - lambda: |-
+        id(ui_state) = 5;
+        id(coach_state) = "Erreur";
+    - output.turn_off: amp_sd
+    - light.turn_on:
+        id: status_led
+        red: 100%
+        green: 0%
+        blue: 0%
+    # No wake-word restart here either — the interval: safety-net restores it once
+    # voice_assistant returns to idle, which also covers the disconnect-mid-turn
+    # path that never reaches on_error at all.
+
+# Wake-word restart safety-net — the SINGLE owner of micro_wake_word restarts.
+# micro_wake_word self-stops after each detection and must be restarted for the
+# next turn. Restarting only on the happy-path voice_assistant end events left it
+# orphaned in STOPPED whenever a wifi/HA drop killed a turn mid-flight (none of
+# on_tts_stream_end / on_end / on_error fire on that path) -> the device went
+# permanently deaf until reboot (bug #0). This interval restarts it on ANY path:
+# whenever the pipeline is idle (voice_assistant.is_running false, i.e. state IDLE)
+# and the wake word is stopped. During a turn -- INCLUDING TTS playback, whose
+# state STREAMING_RESPONSE is != IDLE so is_running stays true -- the wake word is
+# NOT restarted, so there is no KWS-vs-I2S contention during playback (bug #1).
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running:
+              - not:
+                  micro_wake_word.is_running:
+          then:
+            - micro_wake_word.start:
+
+# Onboard WS2812 status LED.
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO48
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    default_transition_length: 0s
+
+# Fonts for the boot/error text screen (both front-ends reuse these).
+font:
+  - file: "gfonts://Roboto"
+    id: font_big
+    size: 20
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 12
+
+sensor:
+  - platform: uptime
+    id: uptime_s
+    update_interval: 1s
+
+switch:
+  - platform: template
+    name: "Mute"
+    id: mute_switch
+    optimistic: true
+
+# Amp idle-hiss mitigation via SD-pin gating on GPIO2 (default OFF = amp shut
+# down at idle; powered only during TTS by the voice_assistant handlers above).
+output:
+  - platform: gpio
+    id: amp_sd
+    pin: GPIO2

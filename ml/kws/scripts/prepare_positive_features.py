@@ -4,18 +4,18 @@ Reads the synthetic "hello lingorm" wav clips produced by piper-sample-generator
 applies microWakeWord's augmentation pipeline, and writes RaggedMmap spectrogram
 feature sets for the training, validation and testing splits.
 
-Background-noise augmentation is intentionally disabled: no external background
-corpus (AudioSet / FMA) is available in this run. Room-impulse-response (RIR)
+Background-noise augmentation is disabled by default (AddBackgroundNoise
+probability 0.0, empty background_paths). Pass --background-dir to enable it
+against an external noise corpus (e.g. ESC-50); this raises the probability to
+0.75, matching microWakeWord's upstream default. Room-impulse-response (RIR)
 augmentation uses the impulse responses bundled with piper-sample-generator.
-This is a documented limitation of the run, not the upstream default.
 """
 
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Optional
 
 from mmap_ninja.ragged import RaggedMmap
 
@@ -60,13 +60,24 @@ def build_clips(positives_dir: Path) -> Clips:
     )
 
 
-def build_augmenter(impulse_dir: Path) -> Augmentation:
+def build_augmenter(impulse_dir: Path, background_dir: Optional[Path]) -> Augmentation:
     impulse_paths = [str(impulse_dir)] if impulse_dir.is_dir() else []
+
+    augmentation_probabilities = dict(AUGMENTATION_PROBABILITIES)
+    background_paths: List[str] = []
+    if background_dir is not None:
+        if not background_dir.is_dir():
+            raise ValueError(
+                f"--background-dir does not exist or is not a directory: {background_dir}"
+            )
+        background_paths = [str(background_dir)]
+        augmentation_probabilities["AddBackgroundNoise"] = 0.75
+
     return Augmentation(
         augmentation_duration_s=AUGMENTATION_DURATION_S,
-        augmentation_probabilities=AUGMENTATION_PROBABILITIES,
+        augmentation_probabilities=augmentation_probabilities,
         impulse_paths=impulse_paths,
-        background_paths=[],
+        background_paths=background_paths,
         min_jitter_s=0.195,
         max_jitter_s=0.205,
     )
@@ -106,10 +117,20 @@ def main() -> None:
     parser.add_argument("--positives-dir", required=True, type=Path)
     parser.add_argument("--impulse-dir", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--background-dir",
+        required=False,
+        type=Path,
+        default=None,
+        help=(
+            "Optional directory of background-noise audio files (e.g. ESC-50). "
+            "When provided, enables AddBackgroundNoise augmentation at p=0.75."
+        ),
+    )
     args = parser.parse_args()
 
     clips = build_clips(args.positives_dir)
-    augmenter = build_augmenter(args.impulse_dir)
+    augmenter = build_augmenter(args.impulse_dir, args.background_dir)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for split_name, output_subdir, slide_frames, repetition in SPLIT_PLAN:

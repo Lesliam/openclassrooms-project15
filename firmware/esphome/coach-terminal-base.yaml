@@ -71,35 +71,22 @@ logger:
   hardware_uart: UART0
 
 wifi:
-  # Single HIDDEN network. Do NOT pin a bssid. A previous build locked
-  # bssid: 3A:07:16:8B:5F:74 (assumed the "strong" radio), but the on-device log
-  # (2026-07-20 14:05) showed that BSSID repeatedly failed the DIRECTED probe
-  # ("Probe Request Unsuccessful"), so the device burned ~40 s cycling
-  # scan -> RETRY_HIDDEN -> RESTART before falling back to "(any)" and associating
-  # to 3A:07:16:22:22:80 (ch 6, -57 dB, healthy). Locking to a BSSID that isn't
-  # answering IS the cold-boot churn -- so let ESPHome associate to whichever
-  # BSSID of the SSID actually responds; post_connect_roaming:false then keeps it.
+  # Single network expressed as a networks: list so the BSSID can be pinned to
+  # the STRONG AP radio (-53 dB) and stop the roam churn to the weaker BSSID that
+  # drove the Beacon-Timeout drops. Comment the bssid line if that AP is removed.
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
-  # Freebox broadcasts a HIDDEN SSID: fast_connect reuses the last good BSSID and
-  # skips a blind scan; power_save_mode:none stops the modem-sleep beacon misses.
+      bssid: 3A:07:16:8B:5F:74
+  # Freebox broadcasts a HIDDEN SSID: fast_connect skips the scan and associates
+  # directly; power_save_mode:none stops the modem-sleep beacon misses.
   fast_connect: true
   power_save_mode: none
-  # Once associated, do NOT roam to another BSSID -- pre-empts the roam churn that
-  # made earlier builds bounce between BSSIDs after connecting.
-  post_connect_roaming: false
-  # Drive the radio at max TX power (ESP32 range 8.5-20.5 dBm) to strengthen a
-  # marginal link and reduce Beacon Timeouts.
-  output_power: 20dB
-  # Optional static IP to skip the ~40 s cold-boot DHCP churn. Gateway
-  # 192.168.1.254 is CONFIRMED (from the connected log). Before uncommenting, pick
-  # a static_ip OUTSIDE the Freebox DHCP pool (or reserve it in the Freebox) so it
-  # cannot collide with a DHCP lease -- a wrong/colliding IP makes the device
-  # unreachable and needs a serial re-flash.
+  # Optional static IP (uncomment + CONFIRM your Freebox gateway before use — a
+  # wrong gateway makes the device unreachable, needing a serial re-flash):
   # manual_ip:
-  #   static_ip: 192.168.1.75    # <-- pick/reserve a free IP before enabling
-  #   gateway: 192.168.1.254     # confirmed Freebox LAN gateway
+  #   static_ip: 192.168.1.75
+  #   gateway: 192.168.1.254    # <-- CONFIRM: your Freebox LAN gateway IP
   #   subnet: 255.255.255.0
   ap:
     ssid: "Coach-Terminal Fallback"

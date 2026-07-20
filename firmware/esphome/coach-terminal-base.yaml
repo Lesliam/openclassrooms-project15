@@ -153,8 +153,14 @@ voice_assistant:
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
-  # micro_wake_word starts on esphome.on_boot and runs independently of HA; it is
-  # only paused by voice_assistant during a turn and resumed on stream-end/end/error.
+  # micro_wake_word starts on esphome.on_boot and runs independently of HA. It
+  # self-stops on every detection (stop_after_detection, to free the mic for the
+  # turn); the `interval:` safety-net below is the SINGLE owner that restarts it
+  # whenever the pipeline is idle and the wake word is stopped. That covers the
+  # clean turn-end, the error path, AND a mid-turn wifi/HA drop which used to
+  # orphan it in STOPPED -> device permanently deaf until reboot (bug #0). The
+  # per-event `micro_wake_word.start` calls were removed so there is exactly one
+  # owner (no double-management "already running" warnings, no KWS during TTS).
   on_client_connected:
     # HA (re)connected -> ready. Face goes to idle; text screen would show ready.
     - lambda: |-
@@ -194,18 +200,19 @@ voice_assistant:
     - lambda: |-
         id(ui_state) = 1;
         id(coach_state) = "Dites hello lingorm";
-    - micro_wake_word.start:     # resume listening only AFTER playback ends
+    # Wake-word restart is owned by the interval: safety-net (see below), so it
+    # fires on EVERY path, not only this happy-path event.
   on_end:
     - light.turn_off: status_led
-    # Only resume here if nothing is playing (a no-response turn); a normal TTS
-    # turn fires on_end mid-playback, handled by on_tts_stream_end instead.
+    # A no-response turn (nothing playing) returns straight to idle; a normal TTS
+    # turn fires on_end mid-playback and the idle transition happens at
+    # on_tts_stream_end. Wake-word restart is owned solely by the interval below.
     - if:
         condition:
           not:
             speaker.is_playing: terminal_speaker
         then:
           - lambda: 'id(ui_state) = 1;'
-          - micro_wake_word.start:
   on_error:
     - lambda: |-
         id(ui_state) = 5;
@@ -216,7 +223,32 @@ voice_assistant:
         red: 100%
         green: 0%
         blue: 0%
-    - micro_wake_word.start:     # keep listening even after an error
+    # No wake-word restart here either — the interval: safety-net restores it once
+    # voice_assistant returns to idle, which also covers the disconnect-mid-turn
+    # path that never reaches on_error at all.
+
+# Wake-word restart safety-net — the SINGLE owner of micro_wake_word restarts.
+# micro_wake_word self-stops after each detection and must be restarted for the
+# next turn. Restarting only on the happy-path voice_assistant end events left it
+# orphaned in STOPPED whenever a wifi/HA drop killed a turn mid-flight (none of
+# on_tts_stream_end / on_end / on_error fire on that path) -> the device went
+# permanently deaf until reboot (bug #0). This interval restarts it on ANY path:
+# whenever the pipeline is idle (voice_assistant.is_running false, i.e. state IDLE)
+# and the wake word is stopped. During a turn -- INCLUDING TTS playback, whose
+# state STREAMING_RESPONSE is != IDLE so is_running stays true -- the wake word is
+# NOT restarted, so there is no KWS-vs-I2S contention during playback (bug #1).
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running:
+              - not:
+                  micro_wake_word.is_running:
+          then:
+            - micro_wake_word.start:
 
 # Onboard WS2812 status LED.
 light:

@@ -19,7 +19,7 @@ results (labels, no replies) and exits cleanly.
 
 Usage::
 
-    OLLAMA_HOST=192.168.1.37 \\
+    OLLAMA_HOST=<host[:port]> \\
         ml/eval/.venv/bin/python ml/eval/run_closing_cue_compare.py
 """
 

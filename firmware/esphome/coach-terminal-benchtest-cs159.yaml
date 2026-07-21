@@ -1,0 +1,294 @@
+# coach-terminal-benchtest-cs159.yaml
+#
+# THROWAWAY BENCH TEST for CS-159 — DO NOT MERGE into the production terminal
+# firmware as-is. Derived from coach-terminal.yaml (single-file variant); the
+# ONLY changes from production are the concurrency-under-test items listed below.
+# Everything else (hardware pins, wifi/api/ota, mic/speaker/display) is copied
+# verbatim from the validated production config.
+#
+# Question under test (spike SPIKE_REPORT_CS159.md §6.2): can ONE
+# micro_wake_word model keep DETECTING during an active voice_assistant turn on
+# the real ESP32-S3 @ ESPHome 2026.5.3, with STT staying intact? This is the
+# single-model case that deliberately AVOIDS the known two-model real-time
+# overrun (coach-terminal.yaml:164-166). No new model is trained: the existing
+# hello_lingorm model is reused as both the start-of-turn wake word AND the
+# mid-turn end-word proxy.
+#
+# Bench changes vs production (and nothing else):
+#   1. micro_wake_word: stop_after_detection: false  -> KWS is NOT self-stopped
+#      on detection, so it KEEPS listening during the whole turn. This is the
+#      concurrency the spike is about.
+#   2. The per-event `micro_wake_word.start` restart calls in the voice_assistant
+#      handlers are REMOVED (they were the restart-suppression mechanism that
+#      paired with stop_after_detection). With KWS running continuously they are
+#      redundant, so they are dropped to keep exactly one owner: boot start.
+#   3. voice_assistant.start is called with silence_detection: false so a long
+#      mid-sentence pause never cuts the learner off (spike §3.3).
+#   4. on_wake_word_detected branches on whether a turn is active:
+#         turn active  -> voice_assistant.stop  (end-word proxy)
+#         idle         -> voice_assistant.start  (normal start)
+#   5. gain_factor: 4 is applied to the micro_wake_word microphone source only.
+#      The mic is 32-bit (bits_per_sample: 32bit); the 2025.5.0 MicrophoneSource
+#      migration note says a previously-32-bit mic needs gain_factor: 4 to match
+#      ESPHome's prior scaling (spike §3.1 / open item #4). It is applied to the
+#      KWS detection path (the path under test) only, so the STT path keeps its
+#      existing, known-good gain behavior (auto_gain: 31dBFS) unchanged.
+#      FLAG: gain_factor:4 for the KWS path is not yet verified on-device; if
+#      detection is weak during the bench run, try removing it (see procedure).
+#   6. Clear INFO logging at each transition so the bench observer can SEE
+#      detections in `esphome logs`.
+#
+# References:
+#   https://esphome.io/components/micro_wake_word/
+#   https://esphome.io/components/voice_assistant/
+#   https://esphome.io/changelog/2025.5.0/   (MicrophoneSource + gain_factor)
+
+substitutions:
+  name: coach-terminal-bench159
+  friendly_name: Coach Terminal Bench CS159
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  # Start on-device KWS once at boot. With stop_after_detection:false below it
+  # then runs continuously for the whole session -- this boot start is the SINGLE
+  # owner of micro_wake_word for the bench test.
+  on_boot:
+    priority: -100
+    then:
+      - micro_wake_word.start:
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+# N16R8 = 8 MB octal PSRAM. Required for micro_wake_word model + audio buffers.
+psram:
+  mode: octal
+  speed: 80MHz
+
+globals:
+  - id: coach_state
+    type: std::string
+    restore_value: false
+    initial_value: '"Demarrage..."'
+
+logger:
+  # DEBUG keeps the audio/KWS internals visible; the INFO transition logs added
+  # below are what the bench observer watches for in `esphome logs`.
+  level: DEBUG
+  # On the ESP32-S3 (esp-idf) pin the logger to UART0 so app logs reach the
+  # CH343 USB-UART used for flashing/monitoring (validated 2026-07-16).
+  hardware_uart: UART0
+
+wifi:
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+      bssid: 3A:07:16:8B:5F:74
+  fast_connect: true
+  power_save_mode: none
+  ap:
+    ssid: "Coach-Terminal Fallback"
+    password: !secret fallback_ap_password
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# I2C bus for the SSD1306 OLED (SDA=41, SCL=42, addr 0x3C).
+i2c:
+  sda: GPIO41
+  scl: GPIO42
+  frequency: 400kHz
+
+# Two independent I2S buses (S3 has two I2S peripherals): mic RX + amp TX.
+i2s_audio:
+  - id: i2s_bus_mic
+    i2s_lrclk_pin: GPIO4   # INMP441 WS
+    i2s_bclk_pin: GPIO5    # INMP441 SCK
+  - id: i2s_bus_amp
+    i2s_lrclk_pin: GPIO16  # MAX98357 LRC (HW-678A vendor pin)
+    i2s_bclk_pin: GPIO15   # MAX98357 BCLK
+
+microphone:
+  - platform: i2s_audio
+    id: terminal_mic
+    i2s_audio_id: i2s_bus_mic
+    i2s_din_pin: GPIO6     # INMP441 SD
+    adc_type: external
+    pdm: false
+    channel: left          # requires L/R pin tied to GND on the module
+    sample_rate: 16000
+    bits_per_sample: 32bit  # INMP441: 24-bit data in a 32-bit I2S frame
+
+speaker:
+  - platform: i2s_audio
+    id: terminal_speaker
+    i2s_audio_id: i2s_bus_amp
+    i2s_dout_pin: GPIO7    # MAX98357 DIN
+    dac_type: external
+    sample_rate: 16000
+    channel: mono
+
+# On-device wake word (KWS). SINGLE model (hello_lingorm) reused as both the
+# start-of-turn word and the mid-turn end-word proxy -- see header. Since
+# ESPHome 2025.5.0 one microphone can be read by micro_wake_word AND
+# voice_assistant simultaneously (spike §3.1), so keeping KWS running during a
+# turn is now legal on 2026.5.3.
+micro_wake_word:
+  id: kws
+  # MicrophoneSource form so gain_factor can be set on the KWS path only.
+  microphone:
+    microphone: terminal_mic
+    gain_factor: 4          # 32-bit mic migration (spike §3.1 / open item #4) -- FLAG: unverified on-device
+  # BENCH CHANGE: do NOT self-stop on detection, so KWS keeps listening for the
+  # whole turn. This is the concurrency under test (production default is true).
+  stop_after_detection: false
+  models:
+    # Reuse the existing custom wake word "hello lingorm" (CS-152). No new model.
+    - model: ../../ml/kws/models/hello_lingorm.json
+  on_wake_word_detected:
+    # Single model, so branch on turn state instead of on which model fired.
+    - if:
+        condition:
+          voice_assistant.is_running:
+        then:
+          # Wake word heard DURING an active turn -> end the turn (end-word proxy).
+          # A detection landing here is the positive result the bench looks for:
+          # KWS stayed alive while voice_assistant was capturing.
+          - logger.log:
+              level: INFO
+              tag: "cs159"
+              format: "wake word during ACTIVE turn -> voice_assistant.stop (end-word proxy)"
+          - voice_assistant.stop:
+        else:
+          # Wake word heard while idle -> normal start, with silence detection
+          # OFF so a long mid-sentence pause never cuts the learner off.
+          - logger.log:
+              level: INFO
+              tag: "cs159"
+              format: "wake word while IDLE -> voice_assistant.start (silence_detection off)"
+          - voice_assistant.start:
+              silence_detection: false
+
+voice_assistant:
+  id: va
+  microphone: terminal_mic  # STT path: simple form, unchanged gain (see header §5)
+  speaker: terminal_speaker
+  use_wake_word: false       # wake word runs on-device via micro_wake_word
+  noise_suppression_level: 2
+  auto_gain: 31dBFS
+  volume_multiplier: 2.0
+  # NOTE: micro_wake_word is started once at boot and, with stop_after_detection
+  # false, runs continuously. The production per-event `micro_wake_word.start`
+  # restarts have therefore been REMOVED from every handler below -- restarting an
+  # already-running component is redundant here and would only add noise.
+  on_client_connected:
+    - lambda: 'id(coach_state) = "Dites hello lingorm";'
+  on_client_disconnected:
+    - lambda: 'id(coach_state) = "Connexion HA...";'
+  on_listening:
+    - logger.log:
+        level: INFO
+        tag: "cs159"
+        format: "voice_assistant LISTENING (capturing) -- KWS should stay alive here"
+    - lambda: 'id(coach_state) = "Ecoute...";'
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 0%
+        blue: 100%
+  on_stt_end:
+    # If this fires with a clean transcript after a mid-turn detection, STT stayed
+    # intact under concurrency -- the second half of the PASS criterion.
+    - logger.log:
+        level: INFO
+        tag: "cs159"
+        format: "voice_assistant STT_END -- transcript delivered (check HA for text)"
+  on_tts_start:
+    - lambda: 'id(coach_state) = "Coach parle";'
+    - output.turn_on: amp_sd
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 100%
+        blue: 0%
+  on_tts_stream_start:
+    - output.turn_on: amp_sd
+  on_tts_stream_end:
+    - output.turn_off: amp_sd
+    - lambda: 'id(coach_state) = "Dites hello lingorm";'
+    # (production restarted micro_wake_word here -- removed, KWS runs continuously)
+  on_end:
+    - light.turn_off: status_led
+    # (production restarted micro_wake_word here -- removed, KWS runs continuously)
+  on_error:
+    - logger.log:
+        level: INFO
+        tag: "cs159"
+        format: "voice_assistant ERROR"
+    - lambda: 'id(coach_state) = "Erreur";'
+    - output.turn_off: amp_sd
+    - light.turn_on:
+        id: status_led
+        red: 100%
+        green: 0%
+        blue: 0%
+    # (production restarted micro_wake_word here -- removed, KWS runs continuously)
+
+# Onboard WS2812 status LED.
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO48
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    default_transition_length: 0s
+
+# Screen: SSD1306 128x64 monochrome OLED, I2C @ 0x3C (confirmed 2026-07-16).
+font:
+  - file: "gfonts://Roboto"
+    id: font_big
+    size: 20
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 12
+
+sensor:
+  - platform: uptime
+    id: uptime_s
+    update_interval: 1s
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 500ms
+    lambda: |-
+      it.print(0, 0, id(font_big), "Coach FR");
+      it.printf(0, 26, id(font_small), "%s", id(coach_state).c_str());
+      it.printf(0, 48, id(font_small), "up: %.0f s", id(uptime_s).state);
+
+switch:
+  - platform: template
+    name: "Mute"
+    id: mute_switch
+    optimistic: true
+
+# Amp idle-hiss mitigation via SD-pin gating on GPIO2 (default OFF = amp shut
+# down at idle; powered only during TTS by the voice_assistant handlers above).
+output:
+  - platform: gpio
+    id: amp_sd
+    pin: GPIO2
+    # default state is OFF (amp shut down) -> only powered during TTS

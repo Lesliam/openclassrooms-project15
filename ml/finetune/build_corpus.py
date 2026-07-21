@@ -653,6 +653,304 @@ EXAMPLES: list[tuple[str, str, str]] = [
         "architecture reste raisonnable si tu sais la justifier. Peux-tu me "
         "redire ta question entièrement en français ?",
     ),
+    # == D5 reconstruct-then-correct on spontaneous speech (CS-158) =========
+    # These teach the coach to reconstruct the INTENDED sentence from disfluent
+    # speech (repetitions, fillers, false starts, self-corrections) and to
+    # correct ONLY a genuine language error in that intended meaning -- never
+    # the disfluency itself. Sentences are deliberately DISJOINT from the D5
+    # held-out set (ml/eval/disfluency_set_v1.md); check_leakage.py enforces it.
+    #
+    # -- Disfluency: immediate word repetition (no real error, engage) -----
+    (
+        "disfluency_word_repetition",
+        "Je je crois que mon planning est réaliste.",
+        "Ton planning a l'air bien pensé. Qu'est-ce qui te fait dire qu'il est "
+        "réaliste, concrètement ?",
+    ),
+    (
+        "disfluency_word_repetition",
+        "Le le capteur détecte le mot de réveil très vite.",
+        "C'est une bonne nouvelle pour la latence. Comment as-tu mesuré cette "
+        "rapidité de détection ?",
+    ),
+    (
+        "disfluency_word_repetition",
+        "Nous nous avons choisi une architecture en deux parties.",
+        "Ce choix en deux parties est intéressant. Peux-tu m'expliquer ce qui "
+        "vous a poussés vers cette séparation ?",
+    ),
+    (
+        "disfluency_word_repetition",
+        "Ma ma base de données garde les phrases des apprenants.",
+        "D'accord, tu conserves donc un historique des phrases. À quoi te "
+        "sert-il pour améliorer le coach ?",
+    ),
+    # -- Disfluency: segment repetition ------------------------------------
+    (
+        "disfluency_segment_repetition",
+        "Mon idée, mon idée c'est d'aider les gens à l'oral.",
+        "C'est un objectif motivant et concret. Selon toi, pourquoi l'oral "
+        "est-il plus difficile à travailler que l'écrit ?",
+    ),
+    (
+        "disfluency_segment_repetition",
+        "Je voudrais, je voudrais te montrer ma démonstration.",
+        "Avec plaisir, je suis curieux de la voir. Qu'est-ce que tu veux "
+        "surtout mettre en avant dans cette démonstration ?",
+    ),
+    (
+        "disfluency_segment_repetition",
+        "Le but du projet, le but du projet c'est de travailler la "
+        "prononciation.",
+        "Travailler la prononciation, c'est ambitieux et utile. Comment ton "
+        "système repère-t-il un problème de prononciation ?",
+    ),
+    # -- Disfluency: filler « euh » ----------------------------------------
+    (
+        "disfluency_filler_euh",
+        "Euh, je pense utiliser euh un petit modèle sur l'appareil.",
+        "Un petit modèle embarqué, c'est une piste intéressante. Quelles "
+        "limites crains-tu avec un modèle aussi léger ?",
+    ),
+    (
+        "disfluency_filler_euh",
+        "Alors euh, mon objectif c'est de réduire la latence.",
+        "Réduire la latence change vraiment l'expérience à l'oral. Quelle "
+        "valeur viserais-tu pour que ça reste agréable ?",
+    ),
+    (
+        "disfluency_filler_euh",
+        "Euh voilà, j'ai terminé la partie firmware.",
+        "Bravo, c'est une étape importante de franchie. Qu'est-ce qu'il te "
+        "reste à faire côté serveur maintenant ?",
+    ),
+    (
+        "disfluency_filler_euh",
+        "Donc euh, il me reste à préparer mes diapositives.",
+        "Les diapositives sont souvent ce qui rend le propos clair. Quel "
+        "message principal veux-tu qu'elles fassent passer ?",
+    ),
+    # -- Disfluency: filler « hmm » + hesitation ---------------------------
+    (
+        "disfluency_filler_hmm",
+        "Hmm, laisse-moi réfléchir, je crois que la sécurité est importante.",
+        "La sécurité mérite en effet qu'on s'y arrête. Quel risque précis "
+        "veux-tu éviter en priorité ?",
+    ),
+    (
+        "disfluency_filler_hmm",
+        "Hmm, comment expliquer, mon projet mêle le matériel et le logiciel.",
+        "Ce mélange matériel-logiciel rend le projet riche. Quelle partie t'a "
+        "demandé le plus de travail jusqu'ici ?",
+    ),
+    (
+        "disfluency_filler_hmm",
+        "Hmm, je dirais que ma priorité c'est la qualité audio.",
+        "La qualité audio conditionne toute la suite de la chaîne. Comment "
+        "juges-tu si le son est assez bon pour la transcription ?",
+    ),
+    # -- Disfluency: false start -------------------------------------------
+    (
+        "disfluency_false_start",
+        "Je pense... en fait, je vais commencer par les tests.",
+        "Commencer par les tests, c'est une démarche prudente. Quels tests te "
+        "semblent les plus urgents à écrire ?",
+    ),
+    (
+        "disfluency_false_start",
+        "On pourrait... non, je préfère garder une seule langue au début.",
+        "Se limiter à une langue au départ, c'est raisonnable. Qu'est-ce qui "
+        "te ferait en ajouter d'autres plus tard ?",
+    ),
+    (
+        "disfluency_false_start",
+        "Le plus dur c'est... disons que c'est la gestion du temps.",
+        "La gestion du temps est un vrai défi sur un projet court. Comment "
+        "t'organises-tu pour tenir tes délais ?",
+    ),
+    (
+        "disfluency_false_start",
+        "Je vais montrer... plutôt je vais présenter mon architecture d'abord.",
+        "Bonne idée de poser l'architecture avant la démonstration. Par quel "
+        "bloc veux-tu commencer ?",
+    ),
+    # -- Disfluency: already self-corrected agreement (keep final form) ----
+    (
+        "disfluency_self_corrected_agreement",
+        "Je suis motivé... motivée par ce projet.",
+        "Ça se sent que le projet te tient à cœur. Qu'est-ce qui te motive le "
+        "plus dedans ?",
+    ),
+    (
+        "disfluency_self_corrected_agreement",
+        "Ma présentation est prêt... prête pour vendredi.",
+        "Parfait, c'est rassurant d'être prête à l'avance. Comment comptes-tu "
+        "répéter d'ici vendredi ?",
+    ),
+    (
+        "disfluency_self_corrected_agreement",
+        "Les résultats sont bon... bons pour l'instant.",
+        "C'est encourageant d'avoir de bons résultats à ce stade. Sur quel "
+        "point veux-tu encore t'améliorer ?",
+    ),
+    # -- Disfluency: already self-corrected word choice --------------------
+    (
+        "disfluency_self_corrected_wordchoice",
+        "J'ai un problème... enfin, un petit défi avec le microphone.",
+        "Un défi sur le microphone, ça arrive souvent en audio. Qu'est-ce qui "
+        "se passe exactement avec le micro ?",
+    ),
+    (
+        "disfluency_self_corrected_wordchoice",
+        "Je veux tester... vérifier que la latence reste basse.",
+        "Vérifier la latence est une étape clé pour un coach vocal. Comment "
+        "mesures-tu ce temps de réponse ?",
+    ),
+    (
+        "disfluency_self_corrected_wordchoice",
+        "Mon logiciel... mon application aide à réviser le français.",
+        "Aider à réviser le français à l'oral, c'est très utile. Quelle "
+        "fonction penses-tu que les apprenants utiliseront le plus ?",
+    ),
+    # -- Disfluency: filler + repetition combined --------------------------
+    (
+        "disfluency_filler_repetition_combo",
+        "Alors euh, ma ma priorité c'est de finir le prototype.",
+        "Finir le prototype avant le reste, c'est un bon repère. Qu'est-ce "
+        "qu'il manque pour qu'il soit complet ?",
+    ),
+    (
+        "disfluency_filler_repetition_combo",
+        "Donc hmm, je je veux améliorer la reconnaissance vocale.",
+        "Améliorer la reconnaissance, c'est le cœur du projet. Quel type "
+        "d'erreurs te gêne le plus aujourd'hui ?",
+    ),
+    (
+        "disfluency_filler_repetition_combo",
+        "Euh voilà, le le serveur renvoie la réponse au terminal.",
+        "D'accord, le serveur pilote donc la réponse. Comment gères-tu le cas "
+        "où il met trop de temps à répondre ?",
+    ),
+    # -- Incomplete turn: invite to continue, never correct ----------------
+    (
+        "incomplete_turn",
+        "Ce que je voulais expliquer, c'est surtout",
+        "Prends ton temps, je t'écoute. Tu veux continuer ta phrase ?",
+    ),
+    (
+        "incomplete_turn",
+        "Mon plus grand défi sur ce projet, c'était de",
+        "Vas-y, je t'écoute jusqu'au bout. Qu'est-ce que tu voulais dire ?",
+    ),
+    (
+        "incomplete_turn",
+        "Et ensuite, une fois la transcription faite, je",
+        "Prends ton temps pour finir ta pensée. Tu peux continuer, je te "
+        "suis.",
+    ),
+    (
+        "incomplete_turn",
+        "Pour la partie sécurité, mon idée était de",
+        "Termine ta phrase quand tu veux, je t'écoute. Tu veux continuer sur "
+        "la sécurité ?",
+    ),
+    (
+        "incomplete_turn",
+        "Ce que je retiens de cette première étape, c'est",
+        "Poursuis, je ne veux pas t'interrompre. Dis-moi la suite de ton "
+        "idée.",
+    ),
+    (
+        "incomplete_turn",
+        "Quand la latence augmente, ce que je fais c'est de",
+        "Prends ton temps, je t'écoute. Tu peux terminer ton explication ?",
+    ),
+    # -- Real error inside disfluency: correct the error, ignore disfluency -
+    (
+        "realerror_in_disfluency",
+        "Je je participe à le concours de projets.",
+        "Tu as dit : « je participe à le concours ». On dit plutôt : « je "
+        "participe au concours ». « À » et « le » se contractent en « au ». "
+        "Peux-tu répéter : « je participe au concours » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "Euh, j'utilise un méthode d'apprentissage supervisé.",
+        "Tu as dit : « un méthode d'apprentissage ». On dit plutôt : « une "
+        "méthode d'apprentissage ». « Méthode » est un mot féminin, donc "
+        "« une ». Peux-tu répéter : « une méthode d'apprentissage » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "Je pense... il faut que je fais une démonstration.",
+        "Tu as dit : « il faut que je fais une démonstration ». On dit "
+        "plutôt : « il faut que je fasse une démonstration ». Après « il faut "
+        "que », on utilise le subjonctif. Peux-tu répéter : « il faut que je "
+        "fasse une démonstration » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "Mon serveur, mon serveur envoie une alerte si il détecte un souci.",
+        "Tu as dit : « si il détecte un souci ». On dit plutôt : « s'il "
+        "détecte un souci ». Devant « il », « si » devient « s' ». Peux-tu "
+        "répéter : « s'il détecte un souci » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "Hmm, les données que j'ai collecté sont propres.",
+        "Tu as dit : « les données que j'ai collecté ». On dit plutôt : « les "
+        "données que j'ai collectées ». Le participe passé s'accorde avec "
+        "« données », placé avant et féminin pluriel. Peux-tu répéter : « les "
+        "données que j'ai collectées » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "Donc euh, mon modèle a un bon score de accuracy.",
+        "Tu as dit : « un bon score de accuracy ». On dit plutôt : « un bon "
+        "score de précision ». En français, on emploie « précision » à la "
+        "place de « accuracy ». Peux-tu répéter : « un bon score de "
+        "précision » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "Je je veux présenter à vous mon planning.",
+        "Tu as dit : « je veux présenter à vous mon planning ». On dit "
+        "plutôt : « je veux vous présenter mon planning ». Le pronom « vous » "
+        "se place avant le verbe. Peux-tu répéter : « je veux vous présenter "
+        "mon planning » ?",
+    ),
+    (
+        "realerror_in_disfluency",
+        "On a fait... euh, on ont testé le prototype hier.",
+        "Tu as dit : « on ont testé le prototype ». On dit plutôt : « on a "
+        "testé le prototype ». « On » se conjugue à la troisième personne du "
+        "singulier. Peux-tu répéter : « on a testé le prototype » ?",
+    ),
+    # -- Clean control: ordinary correct turn, no correction ---------------
+    (
+        "clean_control",
+        "Bonjour, je suis prête pour la séance d'aujourd'hui.",
+        "Ravi de te retrouver, tu sembles en forme. Par quoi veux-tu "
+        "commencer aujourd'hui ?",
+    ),
+    (
+        "clean_control",
+        "J'ai avancé sur mon rapport pendant le week-end.",
+        "C'est bien d'avoir profité du week-end pour avancer. Quelle partie du "
+        "rapport te reste-t-il à écrire ?",
+    ),
+    (
+        "clean_control",
+        "Mon coach vocal répond maintenant en moins d'une seconde.",
+        "Une réponse en moins d'une seconde, c'est excellent pour l'oral. "
+        "Comment as-tu réussi à descendre aussi bas ?",
+    ),
+    (
+        "clean_control",
+        "Je suis allée voir mon mentor et il m'a donné de bons conseils.",
+        "C'est précieux d'avoir un retour de ton mentor. Quel conseil "
+        "comptes-tu appliquer en premier ?",
+    ),
 ]
 
 

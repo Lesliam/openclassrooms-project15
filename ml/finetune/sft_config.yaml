@@ -66,8 +66,10 @@ chat_template: chatml
 train_on_inputs: false
 
 # Small held-out split for a dev loss signal (early-stop / overfit watch).
-# 0.1 of 80 = 8 examples. These come from the CORPUS, never from the eval
-# set (the eval set stays fully unseen — see DATA_SEPARATION.md).
+# 0.1 of 125 = ~12 examples (corpus grown from 80 to 125 by the CS-158
+# disfluency / reconstruct-then-correct examples). These come from the CORPUS,
+# never from a held-out eval set (eval_set_v0 and disfluency_set_v1 stay fully
+# unseen — see DATA_SEPARATION.md).
 val_set_size: 0.1
 
 # --- Sequence / packing ------------------------------------------------

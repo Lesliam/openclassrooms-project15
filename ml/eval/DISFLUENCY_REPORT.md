@@ -93,7 +93,12 @@ Reading:
   with v2 (0.500), keeps real-error recall at 1.000 and CLEAN at 1.000, and it
   is the ONLY arm that ever invites on a cut-off turn (incomplete-invite
   0.000 → 0.250, on the clearest trailing case I3 « ...c'est que... euh... »).
-  Overall accuracy rises 0.579 → 0.632.
+  Overall accuracy rises 0.579 → 0.632. Note that INCOMPLETE correctness uses a
+  deliberately STRICT criterion — it requires an explicit invitation to continue
+  (« Prends ton temps », « Tu veux continuer ? »); an ordinary Socratic relance
+  that does not invite continuation scores as not-correct. So the 0.250 must NOT
+  be read as "the coach mostly ignores cut-offs": it is the rate of the specific,
+  well-formed invite behaviour, which v2 never produced at all.
 - **The headline target (~0) is NOT reached by prompt alone.** Four disfluency
   turns are wrongly corrected on BOTH arms every run: F1 (« je je »), F3
   (« euh »), F6 (self-corrected « allé... allée »), F8 (« le le »). The model
@@ -111,6 +116,14 @@ the two additions were measured live against the same set:
 | + explicit negative examples (« je je », « le le »…) | 0.75 |
 | + positive "reconstruct-first" two-step framing | 0.75 |
 | + restrict "real error" to grammar-only, forbid style/fluency edits | 0.875 |
+
+Evidence status: only the shipped moderate arm is persisted in
+`runs/disfluency-d5/results.json`. The three stronger-variant rows (0.75 / 0.75 /
+0.875) are **exploratory, un-archived decision-support runs — NOT part of the
+reproducible artifact set**; they were run to choose the wording, their
+per-dialogue transcripts were not committed, and they should be read as the
+qualitative trend that motivated shipping the moderate wording, not as
+reproducible measurements.
 
 Adding MORE correction-related instruction text made `qwen2.5:14b` correct
 disfluencies MORE, not less — the added salience of the "correction" topic pulls

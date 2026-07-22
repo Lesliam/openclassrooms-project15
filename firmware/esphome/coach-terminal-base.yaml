@@ -137,7 +137,12 @@ speaker:
 
 micro_wake_word:
   id: kws
-  microphone: terminal_mic
+  # 32-bit INMP441: ESPHome 2025.5.0 per-consumer MicrophoneSource needs
+  # gain_factor: 4 to match pre-migration level, else audio is ~4x too quiet and
+  # whisper VAD strips it as silence (stt-no-text-recognized -> no coach reply).
+  microphone:
+    microphone: terminal_mic
+    gain_factor: 4
   models:
     # Custom project wake word "hello lingorm" (CS-152). SINGLE model only —
     # two models overran the S3 real-time KWS budget and broke both.
@@ -147,7 +152,10 @@ micro_wake_word:
 
 voice_assistant:
   id: va
-  microphone: terminal_mic
+  # Same 32-bit mic gain migration as micro_wake_word above.
+  microphone:
+    microphone: terminal_mic
+    gain_factor: 4
   speaker: terminal_speaker
   use_wake_word: false     # wake word runs on-device via micro_wake_word
   noise_suppression_level: 2

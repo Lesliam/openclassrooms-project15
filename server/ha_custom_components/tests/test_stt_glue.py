@@ -171,6 +171,31 @@ def test_successful_transcription_maps_to_success(
     assert result.text == "je voudrais un cafe"
 
 
+def test_trailing_end_word_is_stripped_from_returned_text(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The entity returns the STRIPPED transcript, not the raw one.
+
+    Guards the wiring in async_process_audio_stream: the pattern itself is
+    covered by test_end_word_strip.py, but only this test fails if stt.py
+    reverts to returning result.text.
+    """
+    patch_transcribe(
+        monkeypatch,
+        TranscriptionResult(
+            status=TranscriptionStatus.SUCCESS,
+            text="Est-ce que tout va bien ? j'ai fini",
+            audio_seconds=4.0,
+            truncated=False,
+        ),
+    )
+
+    result = process(make_entity())
+
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == "Est-ce que tout va bien ?"
+
+
 def test_error_status_maps_to_error_with_no_text(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

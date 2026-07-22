@@ -18,7 +18,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CoachSttConfigEntry
-from .const import CONF_MAX_DURATION, DEFAULT_MAX_DURATION_SECONDS, ENTITY_NAME
+from .const import (
+    CONF_MAX_DURATION,
+    DEFAULT_MAX_DURATION_SECONDS,
+    END_WORD_TRAILING_PATTERN,
+    ENTITY_NAME,
+)
 from .wyoming_client import TranscriptionStatus, transcribe_stream
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +127,20 @@ class CoachSttEntity(stt.SpeechToTextEntity):
                 self._max_duration_seconds,
             )
 
+        # The trailing end word is a turn-control token, not learner content:
+        # strip it so the conversation stage never sees it (see const.py). If
+        # the learner said ONLY the end word, the transcript becomes empty and
+        # falls through to the empty-transcript path below.
+        text = result.text
+        stripped = END_WORD_TRAILING_PATTERN.sub("", text)
+        if stripped != text:
+            _LOGGER.debug(
+                "Trailing end word stripped from transcript: %r -> %r",
+                text,
+                stripped,
+            )
+
         # An empty transcript is returned as a successful result with empty
         # text: assist_pipeline turns that into its own "no text recognized"
         # error instead of an unhandled exception here.
-        return stt.SpeechResult(result.text, stt.SpeechResultState.SUCCESS)
+        return stt.SpeechResult(stripped, stt.SpeechResultState.SUCCESS)

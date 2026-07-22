@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import sys
+import unicodedata
 from collections.abc import AsyncIterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -194,6 +195,105 @@ def test_trailing_end_word_is_stripped_from_returned_text(
 
     assert result.result is stt.SpeechResultState.SUCCESS
     assert result.text == "Est-ce que tout va bien ?"
+
+
+def test_mixed_end_word_run_is_stripped_in_one_pass(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The end word and its observed mistranscription go in the same pass.
+
+    async_process_audio_stream calls sub() once, so a turn ending with both
+    forms is only clean if the pattern covers the whole trailing run.
+    """
+    patch_transcribe(
+        monkeypatch,
+        TranscriptionResult(
+            status=TranscriptionStatus.SUCCESS,
+            text="Voici mon plan. J'ai fini. Réfinis. Réfinis.",
+            audio_seconds=6.0,
+            truncated=False,
+        ),
+    )
+
+    result = process(make_entity())
+
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == "Voici mon plan."
+
+
+def test_transcript_made_of_only_end_words_becomes_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A turn whose whole transcript is the end word strips to empty text.
+
+    Different path from a transcript whisper itself returned empty: this one
+    goes through the strip and its debug log. assist_pipeline turns the empty
+    text into its own handled "stt-no-text-recognized" error, so SUCCESS with
+    an empty string is the intended contract here.
+    """
+    patch_transcribe(
+        monkeypatch,
+        TranscriptionResult(
+            status=TranscriptionStatus.SUCCESS,
+            text="Réfinis. Réfinis.",
+            audio_seconds=3.0,
+            truncated=False,
+        ),
+    )
+
+    result = process(make_entity())
+
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == ""
+
+
+def test_decomposed_accent_is_normalised_before_the_strip(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An NFD transcript is stripped like its NFC twin.
+
+    The pattern spells the variant with a precomposed U+00E9. Without the NFC
+    normalisation in async_process_audio_stream, the same spoken end word
+    would slip through whenever the transcript arrives decomposed.
+    """
+    decomposed = unicodedata.normalize("NFD", "Voici mon plan. Réfinis.")
+    assert decomposed != "Voici mon plan. Réfinis.", "input must really be NFD"
+
+    patch_transcribe(
+        monkeypatch,
+        TranscriptionResult(
+            status=TranscriptionStatus.SUCCESS,
+            text=decomposed,
+            audio_seconds=4.0,
+            truncated=False,
+        ),
+    )
+
+    result = process(make_entity())
+
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == "Voici mon plan."
+
+
+def test_normalisation_leaves_ordinary_accented_text_alone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Learner content with no end word survives the normalisation unchanged."""
+    text = "j'ai étudié les critères de l'évaluation"
+    patch_transcribe(
+        monkeypatch,
+        TranscriptionResult(
+            status=TranscriptionStatus.SUCCESS,
+            text=text,
+            audio_seconds=5.0,
+            truncated=False,
+        ),
+    )
+
+    result = process(make_entity())
+
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == text
 
 
 def test_error_status_maps_to_error_with_no_text(

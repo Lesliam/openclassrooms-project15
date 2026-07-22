@@ -44,7 +44,38 @@ ENTITY_NAME = "Coach FR Whisper sans VAD"
 # - fini/finit/finis/finie all accepted as whisper spellings of one sound;
 # - the whole clause may repeat ("j'ai fini, j'ai fini" stutter) and the
 #   trailing [^\w]* eats any non-word run (ellipsis, quotes, brackets).
+#
+# Second alternative: "refinis". This is not a French word, it is the
+# mistranscription whisper produced for the spoken end word during the session
+# 26 live run ("... Refinis. Refinis." at the end of the turn, repeated).
+# Having no "j'ai" anchor it passed the first alternative and reached the coach
+# LLM. Only this one observed variant is accepted, and only in trailing
+# position: no fuzzy matching and no bare "finis", both of which would eat
+# legitimate learner speech. What excludes the real French neighbours
+# "definis" / "redefinis" ("tu redefinis les regles") is the required letter
+# sequence r + e/accented-e + finis: "definis" has no "r", "redefinis" has a
+# "d" where the "f" must be. \b earns its keep on the other family, words that
+# do contain the sequence: "irrefinis", "refinissable", the English "refinish"
+# (COACH_LANGUAGES offers en too) and "refinis3" all stay whole. A run may mix
+# both alternatives: "... j'ai fini. Refinis." is cleaned in one pass because
+# the alternation sits inside the repeated group.
+#
+# The leading [\s,;]* sits OUTSIDE the repeated group on purpose. Inside it,
+# it overlapped with the group's own trailing [^\w]* ([\s,;] is a subset of
+# [^\w]), so a separator between two occurrences could be split between two
+# iterations in several ways and a repeated run followed by any non-matching
+# word ("Refinis. Refinis. ... Merci.") took exponential time to fail - on the
+# event loop, since stt.py calls sub() synchronously. Hoisted, the separator
+# has exactly one owner, so a single match attempt is linear. sub() itself
+# stays quadratic in the length of such a run, because it retries the
+# $-anchored match from every start position: measured 7 ms on the ~2 KB a
+# 120 s turn can produce, 0.46 s on a 14 KB transcript the backstop makes
+# unreachable. Not exponential is the property that matters here; quadratic at
+# those sizes is harmless. The behaviour is unchanged: the inner [^\w]*
+# already covers everything the inner [\s,;]* could match, while the hoisted
+# copy still protects the first occurrence from eating sentence-final
+# punctuation. See test_repeated_end_word_run_does_not_backtrack_exponentially.
 END_WORD_TRAILING_PATTERN = re.compile(
-    r"(?:[\s,;]*j['’]?\s?ai\s+fini(?:s|t|e)?[^\w]*)+$",
+    r"[\s,;]*(?:(?:j['’]?\s?ai\s+fini(?:s|t|e)?|\br[ée]finis\b)[^\w]*)+$",
     re.IGNORECASE,
 )

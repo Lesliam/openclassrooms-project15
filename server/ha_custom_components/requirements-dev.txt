@@ -1,0 +1,12 @@
+# Dev/test-only dependencies for the coach_stt integration test suite.
+# The runtime requirement is declared in coach_stt/manifest.json (wyoming==1.9.0);
+# Home Assistant installs it into its own environment on the NAS.
+#
+# homeassistant is REQUIRED for tests/test_stt_glue.py to RUN instead of skip
+# (pytest.importorskip guard): without it pytest still exits green with
+# "18 passed, 9 skipped" and the requires_external_vad coverage silently
+# disappears. Pin matches the HA core version the integration targets.
+homeassistant==2026.7.3
+wyoming==1.9.0
+pytest
+pytest-asyncio

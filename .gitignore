@@ -5,3 +5,9 @@ firmware/board-reference/
 firmware/esphome/secrets.yaml
 # ESPHome build artifacts (toolchain, compiled objects)
 firmware/esphome/.esphome/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

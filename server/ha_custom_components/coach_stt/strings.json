@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Coach STT (Wyoming without VAD)",
+        "description": "Connect to the Wyoming speech-to-text service used by the Coach pipeline. The entity created here lets the satellite decide when the turn ends.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "max_duration_seconds": "Maximum turn duration (seconds)"
+        },
+        "data_description": {
+          "max_duration_seconds": "Safety backstop. If the satellite never signals the end of the turn, the audio received so far is transcribed after this duration."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect"
+    },
+    "abort": {
+      "already_configured": "This Wyoming service is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Coach STT options",
+        "data": {
+          "max_duration_seconds": "Maximum turn duration (seconds)"
+        },
+        "data_description": {
+          "max_duration_seconds": "Safety backstop. If the satellite never signals the end of the turn, the audio received so far is transcribed after this duration."
+        }
+      }
+    }
+  }
+}

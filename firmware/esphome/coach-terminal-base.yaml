@@ -20,6 +20,22 @@
 # Faces show ONLY in the happy path (1-4); boot (0) and error (5) always fall
 # back to the text screen so a fault is never hidden behind a happy face.
 #
+# Turn lifecycle (CS-159): the learner opens a turn with the wake word and closes
+# it herself with the end word, so a pause never ends it.
+#   idle        -> wake word model armed, end-word model disabled
+#   on_listening-> end-word model armed instead, micro_wake_word restarted
+#   end word    -> voice_assistant.finish (graceful: transcript + reply kept),
+#                  UI goes to thinking, wake word re-armed
+#   TTS         -> micro_wake_word stopped (never runs during playback)
+# Exactly one of the two models is enabled at any moment, and the interval
+# safety-net at the bottom of this file re-arms the wake word on every failure
+# path AND restarts KWS inside the turn while the `end_word_window` global is
+# set, so a start lost to the asynchronous KWS teardown costs at most 1 s
+# instead of the whole turn. The device-side half only works together with
+# option O2 on the HA side (custom STT entity with requires_external_vad=False);
+# without it the server VAD still ends the turn on silence. See
+# VAD_OPTIONS_CS159.md.
+#
 # Hardware (validated 2026-07-16 on HW-678A): I2S mic WS=4/SCK=5/SD=6, I2S amp
 # DIN=7/BCLK=15/LRC=16, SSD1306 I2C SDA=41/SCL=42 @ 0x3C, RGB GPIO48, amp SD
 # gated on GPIO2. Populate secrets.yaml (cp from the .example) before flashing.
@@ -37,6 +53,15 @@ esphome:
   on_boot:
     priority: -100
     then:
+      # Deterministic KWS arming at boot: end-word model off, wake word model on.
+      # Same disable-then-enable order as every other path in this file, so the
+      # two models are never both enabled, not even for one action.
+      # The WAKE model persists its enabled flag to flash, so a power loss while
+      # it was disabled (i.e. during a turn) would otherwise leave the terminal
+      # booting deaf until the interval safety-net below fixed it. The END model
+      # is internal: true, so its own flag is never persisted.
+      - micro_wake_word.disable_model: mww_end_word
+      - micro_wake_word.enable_model: mww_wake_word
       - micro_wake_word.start:
 
 esp32:
@@ -51,6 +76,18 @@ psram:
   mode: octal
   speed: 80MHz
 
+# Local fork of the bundled voice_assistant component (CS-159 option O5). It adds
+# the `voice_assistant.finish` action used by the end-word handler below: a
+# graceful end of the learner's turn that keeps the transcript and the coach
+# reply, where the stock `voice_assistant.stop` makes Home Assistant abort the
+# pipeline. Base version, complete diff and upgrade procedure:
+# components/voice_assistant/FORK_NOTES.md
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [voice_assistant]
+
 globals:
   # Text shown on the boot/error screen (states 0 and 5).
   - id: coach_state
@@ -62,6 +99,17 @@ globals:
     type: int
     restore_value: false
     initial_value: '0'
+  # True ONLY inside the learner's listening window: set at on_listening, cleared
+  # by every event that closes that window (end-word detection, on_stt_end,
+  # on_tts_start, on_error, loss of the HA client) and by the idle branch of the
+  # interval below. It is the in-turn counterpart of the idle safety-net: the
+  # interval uses it to repair a micro_wake_word.start that was lost to the
+  # asynchronous stop teardown, and clearing it before playback is what keeps the
+  # "no KWS during TTS" invariant (bug #1) intact.
+  - id: end_word_window
+    type: bool
+    restore_value: false
+    initial_value: 'false'
 
 logger:
   level: DEBUG
@@ -144,11 +192,66 @@ micro_wake_word:
     microphone: terminal_mic
     gain_factor: 4
   models:
-    # Custom project wake word "hello lingorm" (CS-152). SINGLE model only —
-    # two models overran the S3 real-time KWS budget and broke both.
-    - model: ../../ml/kws/models/hello_lingorm.json
+    # Custom project wake word "hello lingorm" (CS-152). Enabled whenever the
+    # terminal is idle, i.e. it is the model that opens a turn.
+    - id: mww_wake_word
+      model: ../../ml/kws/models/hello_lingorm.json
+    # End word "j'ai fini" (CS-159). Enabled ONLY during the STT listening window
+    # (see on_listening below). Two models are declared but NEVER enabled at the
+    # same time: micro_wake_word loads a model's tensor arena lazily and unloads
+    # it as soon as it is disabled, so exactly one inference runs per audio slice
+    # and the real-time budget stays the one validated in CS-152 (two enabled
+    # models overran it and broke both).
+    # internal: true keeps this model out of the wake words advertised to HA and
+    # keeps its enabled flag out of flash.
+    # TODO CS-159: swap to ../../ml/kws/models/jai_fini.json once chantier 1 has
+    # trained it. hello_lingorm.json is a placeholder so the config validates;
+    # the routing below is state-based and does not depend on the phrase.
+    # RELEASE GATE: with the placeholder, "hello lingorm" both opens AND closes a
+    # turn. This build is for bench work only — it must NOT be put in front of a
+    # real learner before jai_fini.json exists.
+    - id: mww_end_word
+      internal: true
+      model: ../../ml/kws/models/hello_lingorm.json
   on_wake_word_detected:
-    - voice_assistant.start:
+    # Routing is by pipeline state, not by the detected phrase: only one model is
+    # enabled at any moment, so a detection during an active turn can only come
+    # from the end-word model (and the placeholder still reports "hello lingorm").
+    - if:
+        condition:
+          voice_assistant.is_running:
+        then:
+          # End word during the learner's turn -> graceful finish: HA closes the
+          # audio stream, transcribes what it has and still replies. NOT
+          # voice_assistant.stop, which HA turns into an ABORT (no transcript, no
+          # reply) — see VAD_OPTIONS_CS159.md F8/F9.
+          # Gated on end_word_window because voice_assistant.finish is itself
+          # guarded device-side (it is a no-op unless the component is actually
+          # streaming the microphone). end_word_window is the YAML-visible
+          # equivalent of that guard, so the UI only claims "thinking" when the
+          # turn was really ended here.
+          - if:
+              condition:
+                lambda: 'return id(end_word_window);'
+              then:
+                - voice_assistant.finish:
+                - lambda: |-
+                    id(ui_state) = 3;
+                    // Listening window closed: stop the interval below from
+                    // restarting KWS for the rest of this turn.
+                    id(end_word_window) = false;
+          # Disarm the end word immediately; micro_wake_word has already
+          # self-stopped (stop_after_detection), the interval below restarts it
+          # once the pipeline is idle again. Unconditional: a detection outside
+          # the listening window must still leave the wake word armed.
+          - micro_wake_word.disable_model: mww_end_word
+          - micro_wake_word.enable_model: mww_wake_word
+        else:
+          # Wake word while idle -> open a turn. silence_detection: false is the
+          # device-side half of "the end word is the sole turn terminator"; the
+          # server-side half lives in the HA custom STT entity (option O2).
+          - voice_assistant.start:
+              silence_detection: false
 
 voice_assistant:
   id: va
@@ -163,12 +266,17 @@ voice_assistant:
   volume_multiplier: 2.0
   # micro_wake_word starts on esphome.on_boot and runs independently of HA. It
   # self-stops on every detection (stop_after_detection, to free the mic for the
-  # turn); the `interval:` safety-net below is the SINGLE owner that restarts it
-  # whenever the pipeline is idle and the wake word is stopped. That covers the
-  # clean turn-end, the error path, AND a mid-turn wifi/HA drop which used to
-  # orphan it in STOPPED -> device permanently deaf until reboot (bug #0). The
-  # per-event `micro_wake_word.start` calls were removed so there is exactly one
-  # owner (no double-management "already running" warnings, no KWS during TTS).
+  # turn); the `interval:` safety-net below is the SINGLE owner of the IDLE-path
+  # restart, i.e. it restarts the wake word whenever the pipeline is idle and the
+  # wake word is stopped. That covers the clean turn-end, the error path, AND a
+  # mid-turn wifi/HA drop which used to orphan it in STOPPED -> device
+  # permanently deaf until reboot (bug #0). No per-event restart was re-added on
+  # any idle path, so there are still no "already running" warnings and still no
+  # KWS during TTS. The single exception is on_listening below, which arms the
+  # end word INSIDE the turn; it stops again at on_stt_end, at the detection
+  # itself (stop_after_detection), at on_error, and — as a backstop for the
+  # empty-transcript path that fires none of those — at on_tts_start, so it is
+  # always stopped before playback starts.
   on_client_connected:
     # HA (re)connected -> ready. Face goes to idle; text screen would show ready.
     - lambda: |-
@@ -179,22 +287,76 @@ voice_assistant:
     - lambda: |-
         id(ui_state) = 5;
         id(coach_state) = "Connexion HA...";
+        // A drop mid-turn fires no other voice_assistant event, so close the
+        // listening window here too; the interval's idle branch would otherwise
+        // only clear it once the component has forced itself back to IDLE.
+        id(end_word_window) = false;
   on_listening:
-    # Recording the user's speech.
-    - lambda: 'id(ui_state) = 2;'
+    # Recording the user's speech. This is the ONLY window where the end word is
+    # armed: micro_wake_word must not run during TTS playback (bug #1, KWS vs the
+    # speaker I2S path), and the end word is meaningless outside it anyway.
+    - lambda: |-
+        id(ui_state) = 2;
+        // Open the listening window: from here until one of the closing events
+        // below, the interval repairs the KWS start if it was lost.
+        id(end_word_window) = true;
     - light.turn_on:
         id: status_led
         red: 0%
         green: 0%
         blue: 100%
+    - micro_wake_word.disable_model: mww_wake_word
+    - micro_wake_word.enable_model: mww_end_word
+    # micro_wake_word self-stopped when the wake word opened this turn; restart it
+    # for the end word. This immediate attempt is only the FAST path and is
+    # best-effort: MicroWakeWord::stop() is asynchronous (it sets pending_stop_ and
+    # the component walks DETECTING -> STOPPING -> STOPPED over several loops), so
+    # if the teardown is still in flight here, is_running() is still true, no start
+    # is queued, and the pending stop wins — leaving the end word dead for the
+    # whole turn. The end_word_window branch of the interval below repairs exactly
+    # that case within 1 s. Guarded so this fast path never logs "already running".
+    - if:
+        condition:
+          not:
+            micro_wake_word.is_running:
+        then:
+          - micro_wake_word.start:
   on_stt_end:
     # Speech transcribed, LLM about to run -> "thinking" until TTS starts.
-    - lambda: 'id(ui_state) = 3;'
+    - lambda: |-
+        id(ui_state) = 3;
+        // Listening window closed by the server (or already closed by the end
+        // word): the interval must not restart KWS for the rest of this turn.
+        id(end_word_window) = false;
+    # Listening window closed (by the end word or by the server-side VAD): hand
+    # the microphone back and re-arm the wake word for the next turn. The stop is
+    # idempotent — on the end-word path micro_wake_word already self-stopped.
+    - micro_wake_word.stop:
+    - micro_wake_word.disable_model: mww_end_word
+    - micro_wake_word.enable_model: mww_wake_word
   on_tts_start:
     # Coach response ready -> speaking.
     - lambda: |-
         id(ui_state) = 4;
         id(coach_state) = "Coach parle";
+        // Cleared BEFORE the stop below and before any playback: this is what
+        // makes the interval's end_word_window branch unable to restart KWS
+        // during TTS (bug #1).
+        id(end_word_window) = false;
+    # Last line of defence for the "no KWS during TTS" invariant (bug #1).
+    # on_stt_end normally releases the microphone, but the component DROPS an
+    # STT_END event whose text is empty (upstream voice_assistant.cpp:762-764,
+    # "No text in STT_END event" -> return). Through THIS pipeline that path
+    # looks unreachable (an empty transcript makes assist_pipeline raise
+    # stt-no-text-recognized, which arrives as an error and is handled by
+    # on_error below), but the backstop is kept because it is free and it also
+    # covers any other path that reaches playback without on_stt_end.
+    # Stopping here is idempotent (MicroWakeWord::stop() returns silently when
+    # already STOPPED) and the model swap only writes flash on a real change, so
+    # the normal path costs nothing.
+    - micro_wake_word.stop:
+    - micro_wake_word.disable_model: mww_end_word
+    - micro_wake_word.enable_model: mww_wake_word
     - output.turn_on: amp_sd     # power the MAX98357 before playback begins
     - light.turn_on:
         id: status_led
@@ -225,7 +387,15 @@ voice_assistant:
     - lambda: |-
         id(ui_state) = 5;
         id(coach_state) = "Erreur";
+        // Failed turn: close the listening window before the stop below, so the
+        // interval cannot restart KWS on the way out.
+        id(end_word_window) = false;
     - output.turn_off: amp_sd
+    # A turn that failed during capture leaves the end word armed; disarm it here
+    # so the terminal cannot come back with the wrong model listening.
+    - micro_wake_word.stop:
+    - micro_wake_word.disable_model: mww_end_word
+    - micro_wake_word.enable_model: mww_wake_word
     - light.turn_on:
         id: status_led
         red: 100%
@@ -245,18 +415,60 @@ voice_assistant:
 # and the wake word is stopped. During a turn -- INCLUDING TTS playback, whose
 # state STREAMING_RESPONSE is != IDLE so is_running stays true -- the wake word is
 # NOT restarted, so there is no KWS-vs-I2S contention during playback (bug #1).
+# CS-159 extends the same single-owner idea to the two KWS models: whenever the
+# pipeline is idle, the armed model must be the WAKE word, never the end word.
+# That covers the paths where no voice_assistant event fires at all (mid-turn
+# wifi/HA drop), which would otherwise leave the end word armed while idle — the
+# model-level version of bug #0. The transition is guarded so the enabled flag is
+# only written to flash when it actually changes, not once per second.
+# The else: branch extends the same single-owner repair INSIDE a turn: the
+# on_listening restart is best-effort because MicroWakeWord::stop() is
+# asynchronous, so a lost start would leave the end word dead for the whole turn
+# and only the server-side 120 s backstop could close it. Whenever the listening
+# window is open (end_word_window) and the end model is the armed one, this
+# restarts KWS within 1 s. It cannot fire during TTS: end_word_window is cleared
+# at on_stt_end / on_tts_start / on_error / the end-word detection itself, i.e.
+# always before playback (bug #1 invariant).
 interval:
   - interval: 1s
     then:
       - if:
           condition:
-            and:
-              - not:
-                  voice_assistant.is_running:
-              - not:
-                  micro_wake_word.is_running:
+            not:
+              voice_assistant.is_running:
           then:
-            - micro_wake_word.start:
+            # Pipeline idle: the wake word must be the armed model and KWS must
+            # be running. Also clears any listening window left open by a path
+            # that fired no voice_assistant event at all (mid-turn wifi/HA drop).
+            - lambda: 'id(end_word_window) = false;'
+            - if:
+                condition:
+                  or:
+                    - micro_wake_word.model_is_enabled: mww_end_word
+                    - not:
+                        micro_wake_word.model_is_enabled: mww_wake_word
+                then:
+                  - micro_wake_word.disable_model: mww_end_word
+                  - micro_wake_word.enable_model: mww_wake_word
+            - if:
+                condition:
+                  not:
+                    micro_wake_word.is_running:
+                then:
+                  - micro_wake_word.start:
+          else:
+            # Turn in flight: repair the in-turn KWS start only while the
+            # listening window is open AND the end word is the armed model, so
+            # this can never start the wake word in the middle of a turn.
+            - if:
+                condition:
+                  and:
+                    - lambda: 'return id(end_word_window);'
+                    - micro_wake_word.model_is_enabled: mww_end_word
+                    - not:
+                        micro_wake_word.is_running:
+                then:
+                  - micro_wake_word.start:
 
 # Onboard WS2812 status LED.
 light:

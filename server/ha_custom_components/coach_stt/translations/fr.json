@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Coach STT (Wyoming sans VAD)",
+        "description": "Connexion au service de reconnaissance vocale Wyoming utilisé par le pipeline Coach. L'entité créée ici laisse le satellite décider de la fin du tour de parole.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "max_duration_seconds": "Durée maximale d'un tour de parole (secondes)"
+        },
+        "data_description": {
+          "max_duration_seconds": "Filet de sécurité. Si le satellite ne signale jamais la fin du tour, l'audio déjà reçu est transcrit après cette durée."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connexion impossible"
+    },
+    "abort": {
+      "already_configured": "Ce service Wyoming est déjà configuré"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Coach STT",
+        "data": {
+          "max_duration_seconds": "Durée maximale d'un tour de parole (secondes)"
+        },
+        "data_description": {
+          "max_duration_seconds": "Filet de sécurité. Si le satellite ne signale jamais la fin du tour, l'audio déjà reçu est transcrit après cette durée."
+        }
+      }
+    }
+  }
+}

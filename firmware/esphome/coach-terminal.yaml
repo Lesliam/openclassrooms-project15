@@ -1,5 +1,12 @@
 # coach-terminal.yaml — ESPHome config SKELETON for the Coach FR voice terminal
 #
+# SUPERSEDED — DO NOT FLASH. coach-terminal-base.yaml (+ one of the
+# coach-terminal-faces-*.yaml front-ends) is the current design. This file still
+# carries the pre-CS-159 per-event `micro_wake_word.start` pattern (bug #0: a
+# mid-turn wifi/HA drop orphans KWS in STOPPED and the device goes deaf until
+# reboot) and single-model KWS with no end word. Kept only as the reference for
+# the hardware pin-out and the bring-up history.
+#
 # Target: ESP32-S3 N16R8 devkit (16 MB flash / 8 MB octal PSRAM)
 # Audio out: MAX98357 I2S amplifier + 4-ohm 3W speaker
 # Audio in:  INMP441 I2S MEMS microphone (confirmed 2026-07-06, CS-147)

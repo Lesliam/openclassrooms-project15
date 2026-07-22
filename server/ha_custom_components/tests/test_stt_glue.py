@@ -196,6 +196,30 @@ def test_trailing_end_word_is_stripped_from_returned_text(
     assert result.text == "Est-ce que tout va bien ?"
 
 
+def test_mixed_end_word_run_is_stripped_in_one_pass(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The end word and its observed mistranscription go in the same pass.
+
+    async_process_audio_stream calls sub() once, so a turn ending with both
+    forms is only clean if the pattern covers the whole trailing run.
+    """
+    patch_transcribe(
+        monkeypatch,
+        TranscriptionResult(
+            status=TranscriptionStatus.SUCCESS,
+            text="Voici mon plan. J'ai fini. Réfinis. Réfinis.",
+            audio_seconds=6.0,
+            truncated=False,
+        ),
+    )
+
+    result = process(make_entity())
+
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == "Voici mon plan."
+
+
 def test_error_status_maps_to_error_with_no_text(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

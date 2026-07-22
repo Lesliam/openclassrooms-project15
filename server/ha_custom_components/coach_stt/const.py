@@ -44,7 +44,21 @@ ENTITY_NAME = "Coach FR Whisper sans VAD"
 # - fini/finit/finis/finie all accepted as whisper spellings of one sound;
 # - the whole clause may repeat ("j'ai fini, j'ai fini" stutter) and the
 #   trailing [^\w]* eats any non-word run (ellipsis, quotes, brackets).
+#
+# Second alternative: "refinis". This is not a French word, it is the
+# mistranscription whisper produced for the spoken end word during the session
+# 26 live run ("... Refinis. Refinis." at the end of the turn, repeated).
+# Having no "j'ai" anchor it passed the first alternative and reached the coach
+# LLM. Only this one observed variant is accepted, and only in trailing
+# position: no fuzzy matching and no bare "finis", both of which would eat
+# legitimate learner speech. \b on each side keeps the accented and unaccented
+# spellings whole words, so "definis" / "redefinis" (a real French verb form,
+# "tu redefinis les regles") never match - neither has "r" + e/accented-e
+# immediately before "finis" - and a longer word containing the sequence is
+# excluded by the boundary as well. A run may mix both alternatives:
+# "... j'ai fini. Refinis." is cleaned in one pass because the alternation sits
+# inside the repeated group.
 END_WORD_TRAILING_PATTERN = re.compile(
-    r"(?:[\s,;]*j['’]?\s?ai\s+fini(?:s|t|e)?[^\w]*)+$",
+    r"(?:[\s,;]*(?:j['’]?\s?ai\s+fini(?:s|t|e)?|\br[ée]finis\b)[^\w]*)+$",
     re.IGNORECASE,
 )

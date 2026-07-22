@@ -44,6 +44,22 @@ PATTERN = _CONST.END_WORD_TRAILING_PATTERN
         # Stuttered/repeated end word (M3): all trailing occurrences go.
         ("Mon plan est solide, j'ai fini, j'ai fini", "Mon plan est solide"),
         ("Mon plan est solide. J'ai fini. J'ai fini.", "Mon plan est solide."),
+        # Observed whisper mistranscription of the end word (session 26 live
+        # run): single, repeated, lowercase and unaccented spellings.
+        ("Voici mon plan. Réfinis.", "Voici mon plan."),
+        ("Voici mon plan. Réfinis. Réfinis.", "Voici mon plan."),
+        ("Voici mon plan, réfinis", "Voici mon plan"),
+        ("Voici mon plan. Refinis", "Voici mon plan."),
+        ("Voici mon plan. réfinis !", "Voici mon plan."),
+        ("Voici mon plan. RÉFINIS.", "Voici mon plan."),
+        # Only the mistranscription -> empty transcript.
+        ("Réfinis.", ""),
+        ("Réfinis. Réfinis.", ""),
+        # Mixed run: the real end word followed by its mistranscription must be
+        # cleaned in the single sub() call stt.py performs.
+        ("Voici mon plan. J'ai fini. Réfinis.", "Voici mon plan."),
+        ("Voici mon plan. J'ai fini. Réfinis. Réfinis.", "Voici mon plan."),
+        ("Mon plan avance, réfinis, j'ai fini", "Mon plan avance"),
     ],
 )
 def test_trailing_end_word_is_stripped(transcript: str, expected: str) -> None:
@@ -59,6 +75,20 @@ def test_trailing_end_word_is_stripped(transcript: str, expected: str) -> None:
         # Other 'fini' phrases are not the end word.
         "le projet est fini mais je continue",
         "c'est fini pour la partie technique, passons a la suite",
+        # Real French words ending in -finis must survive in trailing position:
+        # only the observed "refinis" mistranscription is stripped.
+        "tu définis les règles",
+        "tu définis",
+        "les critères que tu redéfinis",
+        "je redéfinis",
+        "ce sont les paramètres redéfinis",
+        "confinis",
+        # 'refinis' inside a larger word is not the end word either.
+        "les résultats irréfinis",
+        "réfinissable",
+        # Mid-sentence occurrence is not trailing, so it stays.
+        "réfinis le plan puis reviens vers moi",
+        "quand tu réfinis le plan, note les écarts",
     ],
 )
 def test_non_trailing_or_other_fini_untouched(transcript: str) -> None:

@@ -204,19 +204,20 @@ micro_wake_word:
     # models overran it and broke both).
     # internal: true keeps this model out of the wake words advertised to HA and
     # keeps its enabled flag out of flash.
-    # TODO CS-159: swap to ../../ml/kws/models/jai_fini.json once chantier 1 has
-    # trained it. hello_lingorm.json is a placeholder so the config validates;
-    # the routing below is state-based and does not depend on the phrase.
-    # RELEASE GATE: with the placeholder, "hello lingorm" both opens AND closes a
-    # turn. This build is for bench work only — it must NOT be put in front of a
-    # real learner before jai_fini.json exists.
+    # jai_fini INT8 streaming model (chantier 1, trained 2026-07-22): 99 real
+    # clips + 4961 synthetic (siwis/tom), sweep frr 0.0197 @ cutoff 0.49 with 0
+    # false accepts/h on the (English) ambient test set. probability_cutoff
+    # starts at the conservative 0.6 and MUST be tuned on-device: "j'ai fini" is
+    # common French and the training negatives are English speech, so the sweep's
+    # false-accept figures are optimistic (and the sweep stops at 0.49 -- FRR at
+    # 0.6 is unmeasured and will be higher).
     - id: mww_end_word
       internal: true
-      model: ../../ml/kws/models/hello_lingorm.json
+      model: ../../ml/kws/models/jai_fini.json
   on_wake_word_detected:
     # Routing is by pipeline state, not by the detected phrase: only one model is
     # enabled at any moment, so a detection during an active turn can only come
-    # from the end-word model (and the placeholder still reports "hello lingorm").
+    # from the end-word model.
     - if:
         condition:
           voice_assistant.is_running:

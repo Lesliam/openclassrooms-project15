@@ -124,7 +124,7 @@ _TIMING_HARD_TIMEOUT_SECONDS = 20.0
 
 
 @pytest.mark.parametrize("clause", ["Réfinis. ", "J'ai fini, ", "refinis, "])
-def test_repeated_end_word_run_is_linear_time(clause: str) -> None:
+def test_repeated_end_word_run_does_not_backtrack_exponentially(clause: str) -> None:
     """A long repeated run followed by a non-matching word must not explode.
 
     Whisper repetition loops are the failure mode this pattern exists for, and
@@ -134,12 +134,14 @@ def test_repeated_end_word_run_is_linear_time(clause: str) -> None:
     exponential time - on the Home Assistant event loop, since stt.py calls
     sub() synchronously.
 
-    Run in a child process on purpose: the regression it guards against does
-    not return at all for this input, and the regex engine holds the GIL, so
-    an in-process measurement would hang the whole run instead of failing it.
-    The two bounds are different tools - the hard timeout catches the
-    complexity class, the budget catches a merely slow pattern. Both are
-    generous: the linear pattern needs well under a millisecond here.
+    One sample at N=30 cannot establish a complexity class; what it does catch
+    is the regression that matters, a run of that size no longer returning at
+    all. sub() remains quadratic in the length of the run by design (see
+    const.py), which is why the budget is a flat bound and not a growth check.
+
+    Run in a child process on purpose: the regression guarded against does not
+    return, and the regex engine holds the GIL, so an in-process measurement
+    would hang the whole run instead of failing it.
     """
     try:
         completed = subprocess.run(
@@ -155,8 +157,17 @@ def test_repeated_end_word_run_is_linear_time(clause: str) -> None:
             f"on 30 repetitions of {clause!r}: the repetition group is ambiguous "
             "again and backtracking is exponential"
         )
+    except subprocess.CalledProcessError as exc:
+        pytest.fail(f"timing child failed: {exc.stderr}")
 
-    elapsed, unchanged = completed.stdout.split()
+    tokens = completed.stdout.split()
+    if len(tokens) != 2:
+        pytest.fail(
+            f"timing child printed {len(tokens)} tokens, expected 2 "
+            f"(elapsed, unchanged): {completed.stdout!r}"
+        )
+
+    elapsed, unchanged = tokens
     assert unchanged == "True", "a non-matching tail must leave the text alone"
     assert float(elapsed) < _TIMING_BUDGET_SECONDS, (
         f"pattern took {float(elapsed):.3f} s on 30 repetitions of {clause!r}"

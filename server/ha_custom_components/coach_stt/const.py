@@ -66,10 +66,15 @@ ENTITY_NAME = "Coach FR Whisper sans VAD"
 # iterations in several ways and a repeated run followed by any non-matching
 # word ("Refinis. Refinis. ... Merci.") took exponential time to fail - on the
 # event loop, since stt.py calls sub() synchronously. Hoisted, the separator
-# has exactly one owner and the match is linear. The behaviour is unchanged:
-# the inner [^\w]* already covers everything the inner [\s,;]* could match,
-# while the hoisted copy still protects the first occurrence from eating
-# sentence-final punctuation. See test_repeated_end_word_run_is_linear_time.
+# has exactly one owner, so a single match attempt is linear. sub() itself
+# stays quadratic in the length of such a run, because it retries the
+# $-anchored match from every start position: measured 7 ms on the ~2 KB a
+# 120 s turn can produce, 0.46 s on a 14 KB transcript the backstop makes
+# unreachable. Not exponential is the property that matters here; quadratic at
+# those sizes is harmless. The behaviour is unchanged: the inner [^\w]*
+# already covers everything the inner [\s,;]* could match, while the hoisted
+# copy still protects the first occurrence from eating sentence-final
+# punctuation. See test_repeated_end_word_run_does_not_backtrack_exponentially.
 END_WORD_TRAILING_PATTERN = re.compile(
     r"[\s,;]*(?:(?:j['’]?\s?ai\s+fini(?:s|t|e)?|\br[ée]finis\b)[^\w]*)+$",
     re.IGNORECASE,

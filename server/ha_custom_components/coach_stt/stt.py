@@ -137,7 +137,12 @@ class CoachSttEntity(stt.SpeechToTextEntity):
         # variant with a precomposed "e" acute (U+00E9), so a decomposed
         # transcript ("e" + U+0301) would slip through the strip unnoticed.
         # faster-whisper emits NFC today, which is exactly why the dependency
-        # would stay silent until the day it does not.
+        # would stay silent until the day it does not. It applies to the whole
+        # transcript, including turns nothing is stripped from: the result is
+        # canonically equivalent to what whisper produced and is the better
+        # wire format for everything downstream. NFC and not NFKC on purpose -
+        # NFKC would fold compatibility characters such as the U+FB01 "fi"
+        # ligature into plain letters and change what the pattern can see.
         text = unicodedata.normalize("NFC", result.text)
         stripped = END_WORD_TRAILING_PATTERN.sub("", text)
         if stripped != text:

@@ -97,6 +97,14 @@ in coach-terminal-base.yaml. The pre-window drop (21:49, scan cycles with
 "No networks found" against the hidden SSID) matches the same
 blind-window signature mid-cascade.
 
+Post-fix control window (same position, same probes, firmware with the
+fix flashed 22:23): 22:24:39-22:34:39, ZERO drops and zero
+roam/disconnect serial events, vs 1 cascade in the pre-fix window. One
+window is not statistical proof; the mechanism-level evidence (source
+audit + live capture + clean control) is what carries the conclusion.
+The RF swing itself remains environmental — physical relocation stays
+the fallback if drops recur in daily use.
+
 ### R1 field re-assessment: park it
 
 Deliberate re-repro failed in normal use: after « j'ai fini » the coach

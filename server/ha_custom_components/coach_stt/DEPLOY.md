@@ -137,9 +137,12 @@ cd /home/yang/wsl-home-yang/openclassrooms/project15/project/server/ha_custom_co
   `requires_external_vad=False` contract, the `TranscriptionStatus` ->
   `SpeechResultState` mapping and the truncation warning. It needs the
   `homeassistant` package in the venv and is skipped automatically
-  (`pytest.importorskip`) where that package is absent. A run that reports
-  "18 passed, 9 skipped" is therefore NOT a full pass — recreate the venv from
-  `../requirements-dev.txt` so all 27 tests actually run.
+  (`pytest.importorskip`) where that package is absent. ANY run that reports
+  skips is therefore NOT a full pass, whatever the counts — recreate the venv
+  from `../requirements-dev.txt` so the whole suite actually runs. A real full
+  pass collects the entire `tests/` directory with ZERO skips (80 tests as of
+  2026-07-22; the exact count grows with the suite — the invariant to check is
+  "0 skipped", not a fixed number).
 
 `config_flow.py` and `__init__.py` are still only exercised by deploying: they
 need a running Home Assistant instance, not just the library.

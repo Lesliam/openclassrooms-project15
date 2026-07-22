@@ -153,7 +153,13 @@ speaker:
 # French wake word trained in the KWS lifecycle work (dev-kws) replaces it.
 micro_wake_word:
   id: kws
-  microphone: terminal_mic
+  # 32-bit INMP441: ESPHome 2025.5.0 moved to per-consumer MicrophoneSource and a
+  # previously-32-bit mic needs gain_factor: 4 to match the pre-2025.5.0 level.
+  # Without it, on 2026.5.x the captured audio is ~4x too quiet -> whisper's VAD
+  # strips it all as silence -> stt-no-text-recognized -> no coach reply.
+  microphone:
+    microphone: terminal_mic
+    gain_factor: 4
   models:
     # The custom project wake word "hello lingorm" (CS-152), loaded from the
     # local manifest in ml/kws/models/. ESPHome validates every manifest URL
@@ -170,7 +176,11 @@ micro_wake_word:
 
 voice_assistant:
   id: va
-  microphone: terminal_mic
+  # Same 32-bit mic gain migration as micro_wake_word above: gain_factor: 4
+  # restores the STT audio level so whisper's VAD stops removing it as silence.
+  microphone:
+    microphone: terminal_mic
+    gain_factor: 4
   speaker: terminal_speaker
   # Wake word runs on-device via micro_wake_word, not in the HA pipeline:
   use_wake_word: false

@@ -51,14 +51,26 @@ ENTITY_NAME = "Coach FR Whisper sans VAD"
 # Having no "j'ai" anchor it passed the first alternative and reached the coach
 # LLM. Only this one observed variant is accepted, and only in trailing
 # position: no fuzzy matching and no bare "finis", both of which would eat
-# legitimate learner speech. \b on each side keeps the accented and unaccented
-# spellings whole words, so "definis" / "redefinis" (a real French verb form,
-# "tu redefinis les regles") never match - neither has "r" + e/accented-e
-# immediately before "finis" - and a longer word containing the sequence is
-# excluded by the boundary as well. A run may mix both alternatives:
-# "... j'ai fini. Refinis." is cleaned in one pass because the alternation sits
-# inside the repeated group.
+# legitimate learner speech. What excludes the real French neighbours
+# "definis" / "redefinis" ("tu redefinis les regles") is the required letter
+# sequence r + e/accented-e + finis: "definis" has no "r", "redefinis" has a
+# "d" where the "f" must be. \b earns its keep on the other family, words that
+# do contain the sequence: "irrefinis", "refinissable", the English "refinish"
+# (COACH_LANGUAGES offers en too) and "refinis3" all stay whole. A run may mix
+# both alternatives: "... j'ai fini. Refinis." is cleaned in one pass because
+# the alternation sits inside the repeated group.
+#
+# The leading [\s,;]* sits OUTSIDE the repeated group on purpose. Inside it,
+# it overlapped with the group's own trailing [^\w]* ([\s,;] is a subset of
+# [^\w]), so a separator between two occurrences could be split between two
+# iterations in several ways and a repeated run followed by any non-matching
+# word ("Refinis. Refinis. ... Merci.") took exponential time to fail - on the
+# event loop, since stt.py calls sub() synchronously. Hoisted, the separator
+# has exactly one owner and the match is linear. The behaviour is unchanged:
+# the inner [^\w]* already covers everything the inner [\s,;]* could match,
+# while the hoisted copy still protects the first occurrence from eating
+# sentence-final punctuation. See test_repeated_end_word_run_is_linear_time.
 END_WORD_TRAILING_PATTERN = re.compile(
-    r"(?:[\s,;]*(?:j['’]?\s?ai\s+fini(?:s|t|e)?|\br[ée]finis\b)[^\w]*)+$",
+    r"[\s,;]*(?:(?:j['’]?\s?ai\s+fini(?:s|t|e)?|\br[ée]finis\b)[^\w]*)+$",
     re.IGNORECASE,
 )

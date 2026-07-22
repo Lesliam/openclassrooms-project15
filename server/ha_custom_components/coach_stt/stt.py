@@ -10,6 +10,7 @@ end the turn (see assist_pipeline/pipeline.py, speech-to-text stage).
 from __future__ import annotations
 
 import logging
+import unicodedata
 from collections.abc import AsyncIterable
 
 from homeassistant.components import stt
@@ -131,7 +132,13 @@ class CoachSttEntity(stt.SpeechToTextEntity):
         # strip it so the conversation stage never sees it (see const.py). If
         # the learner said ONLY the end word, the transcript becomes empty and
         # falls through to the empty-transcript path below.
-        text = result.text
+        #
+        # Normalised to NFC first: the pattern spells the mistranscription
+        # variant with a precomposed "e" acute (U+00E9), so a decomposed
+        # transcript ("e" + U+0301) would slip through the strip unnoticed.
+        # faster-whisper emits NFC today, which is exactly why the dependency
+        # would stay silent until the day it does not.
+        text = unicodedata.normalize("NFC", result.text)
         stripped = END_WORD_TRAILING_PATTERN.sub("", text)
         if stripped != text:
             _LOGGER.debug(

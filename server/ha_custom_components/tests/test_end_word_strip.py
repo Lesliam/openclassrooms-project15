@@ -7,6 +7,8 @@ install, mirroring the conftest approach used for wyoming_client.
 from __future__ import annotations
 
 import importlib.util
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -83,9 +85,19 @@ def test_trailing_end_word_is_stripped(transcript: str, expected: str) -> None:
         "je redéfinis",
         "ce sont les paramètres redéfinis",
         "confinis",
+        # Same neighbours in the shape a live transcript takes: sentence
+        # punctuation right after the word, like every stripped case above.
+        "Tu redéfinis.",
+        "Tu définis !",
+        "Vous redéfinis…",
         # 'refinis' inside a larger word is not the end word either.
         "les résultats irréfinis",
         "réfinissable",
+        # The right \b also holds against a non-letter word character and
+        # against English: the entity offers 'en' as well (COACH_LANGUAGES).
+        "refinis3",
+        "refinish",
+        "on a refinish",
         # Mid-sentence occurrence is not trailing, so it stays.
         "réfinis le plan puis reviens vers moi",
         "quand tu réfinis le plan, note les écarts",
@@ -93,3 +105,59 @@ def test_trailing_end_word_is_stripped(transcript: str, expected: str) -> None:
 )
 def test_non_trailing_or_other_fini_untouched(transcript: str) -> None:
     assert PATTERN.sub("", transcript) == transcript
+
+
+_TIMING_CHILD = """
+import importlib.util, sys, time
+spec = importlib.util.spec_from_file_location("coach_stt_const", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+transcript = "Voici mon plan. " + sys.argv[2] * 30 + "merci"
+start = time.perf_counter()
+result = module.END_WORD_TRAILING_PATTERN.sub("", transcript)
+print(time.perf_counter() - start)
+print(result == transcript)
+"""
+
+_TIMING_BUDGET_SECONDS = 1.0
+_TIMING_HARD_TIMEOUT_SECONDS = 20.0
+
+
+@pytest.mark.parametrize("clause", ["Réfinis. ", "J'ai fini, ", "refinis, "])
+def test_repeated_end_word_run_is_linear_time(clause: str) -> None:
+    """A long repeated run followed by a non-matching word must not explode.
+
+    Whisper repetition loops are the failure mode this pattern exists for, and
+    its stock hallucinated tail ("Merci.") supplies the trailing word that
+    makes the overall match fail. With the leading class inside the repeated
+    group the two quantified classes overlapped, and failing that match took
+    exponential time - on the Home Assistant event loop, since stt.py calls
+    sub() synchronously.
+
+    Run in a child process on purpose: the regression it guards against does
+    not return at all for this input, and the regex engine holds the GIL, so
+    an in-process measurement would hang the whole run instead of failing it.
+    The two bounds are different tools - the hard timeout catches the
+    complexity class, the budget catches a merely slow pattern. Both are
+    generous: the linear pattern needs well under a millisecond here.
+    """
+    try:
+        completed = subprocess.run(
+            [sys.executable, "-c", _TIMING_CHILD, str(_CONST_PATH), clause],
+            capture_output=True,
+            text=True,
+            timeout=_TIMING_HARD_TIMEOUT_SECONDS,
+            check=True,
+        )
+    except subprocess.TimeoutExpired:
+        pytest.fail(
+            f"pattern did not finish within {_TIMING_HARD_TIMEOUT_SECONDS:.0f} s "
+            f"on 30 repetitions of {clause!r}: the repetition group is ambiguous "
+            "again and backtracking is exponential"
+        )
+
+    elapsed, unchanged = completed.stdout.split()
+    assert unchanged == "True", "a non-matching tail must leave the text alone"
+    assert float(elapsed) < _TIMING_BUDGET_SECONDS, (
+        f"pattern took {float(elapsed):.3f} s on 30 repetitions of {clause!r}"
+    )

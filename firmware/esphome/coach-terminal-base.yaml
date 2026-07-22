@@ -130,6 +130,20 @@ wifi:
   # directly; power_save_mode:none stops the modem-sleep beacon misses.
   fast_connect: true
   power_save_mode: none
+  # The ESPHome roam engine (post_connect_roaming, C++ default true) actively
+  # LEAVES the current AP when a sibling BSSID measures >=10 dB stronger,
+  # ignoring the bssid pin above. With the RF swing next to the PC (-53 to
+  # -72 dB observed while stationary, 2026-07-22) that turned one transient
+  # fade into a 56 s outage cascade: "Roaming to 3A:07:16:22:22:80 (+17 dB)"
+  # -> Association Leave -> roam failed -> full adapter restart loop. A
+  # successful roam would also persist the roamed-to BSSID as the next boot's
+  # fast_connect target, defeating the pin across reboots. Disable it; the
+  # bssid pin plus the retry state machine handle reconnection without
+  # self-inflicted leaves. Re-added after the 7c42da9 wholesale revert: that
+  # revert judged a 3-change bundle against Beacon-Timeout drops, never this
+  # option alone against THIS roam-cascade signature. Full capture:
+  # HW_VALIDATION_CS159.md, addendum 2026-07-22 late evening.
+  post_connect_roaming: false
   # Optional static IP (uncomment + CONFIRM your Freebox gateway before use — a
   # wrong gateway makes the device unreachable, needing a serial re-flash):
   # manual_ip:

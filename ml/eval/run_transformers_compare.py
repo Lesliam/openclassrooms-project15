@@ -38,6 +38,9 @@ from harness.runner import ensure_drift_depth_available, run_all  # noqa: E402
 
 _BASE = "Qwen/Qwen2.5-14B-Instruct"
 _BASELINE_ARM = "baseline"
+# Default tuned-arm label (session-14 adapter). It names the run folder and the
+# report header only: the client enables the adapter for ANY name that is not
+# ``_BASELINE_ARM``, so a later adapter is labelled via ``--tuned-arm``.
 _TUNED_ARM = "coach-tuned:v0"
 
 
@@ -139,13 +142,22 @@ def main() -> None:
     parser.add_argument("--drift-depth", type=int, default=constants.DRYRUN_DRIFT_DEPTH)
     parser.add_argument("--max-new-tokens", type=int, default=200)
     parser.add_argument("--out-root", type=Path, required=True)
+    parser.add_argument(
+        "--tuned-arm",
+        type=str,
+        default=_TUNED_ARM,
+        help="Label for the adapter-enabled arm (run folder + report header).",
+    )
     args = parser.parse_args()
+
+    if args.tuned_arm == _BASELINE_ARM:
+        parser.error(f"--tuned-arm must not be {_BASELINE_ARM!r} (disables the adapter)")
 
     ensure_drift_depth_available(args.drift_depth)
     args.out_root.mkdir(parents=True, exist_ok=True)
 
     client = TransformersClient(args.adapter, args.max_new_tokens)
-    for arm in (_BASELINE_ARM, _TUNED_ARM):
+    for arm in (_BASELINE_ARM, args.tuned_arm):
         _run_arm(client, arm, args.repetitions, args.drift_depth, args.out_root)
 
 

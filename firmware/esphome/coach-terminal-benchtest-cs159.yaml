@@ -181,7 +181,11 @@ micro_wake_word:
 
 voice_assistant:
   id: va
-  microphone: terminal_mic  # STT path: simple form, unchanged gain (see header §5)
+  # STT path now also gets gain_factor: 4 (32-bit mic migration, matches the
+  # working production fix) so whisper VAD does not strip the audio as silence.
+  microphone:
+    microphone: terminal_mic
+    gain_factor: 4
   speaker: terminal_speaker
   use_wake_word: false       # wake word runs on-device via micro_wake_word
   noise_suppression_level: 2

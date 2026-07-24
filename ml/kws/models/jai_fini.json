@@ -1,0 +1,17 @@
+{
+  "type": "micro",
+  "wake_word": "j'ai fini",
+  "author": "P15 Coach Vocal FR",
+  "model": "jai_fini.tflite",
+  "trained_languages": [
+    "fr"
+  ],
+  "version": 2,
+  "micro": {
+    "probability_cutoff": 0.6,
+    "sliding_window_size": 5,
+    "feature_step_size": 10,
+    "tensor_arena_size": 26080,
+    "minimum_esphome_version": "2024.7.0"
+  }
+}

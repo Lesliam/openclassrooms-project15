@@ -1,0 +1,20 @@
+{
+  "run_id": "transformers-baseline",
+  "mode": "baseline",
+  "model_under_test": "baseline",
+  "judge_model": "none",
+  "judge_enabled": false,
+  "repetitions": 2,
+  "drift_depth": 7,
+  "shallow_filler_count": 2,
+  "decode": {
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "seed": 42,
+    "num_ctx": 8192
+  },
+  "seed_base": 42,
+  "system_prompt_sha256": "50480f0fea969ca074ecac3809fa99445b2421d06d0de3f0f7ed0579a84746ab",
+  "eval_set_sha256": "a743af252407034571f29511a661ea6d36fb15104e2c21c6324bb6b4ce85fc10",
+  "ollama_base_url": "http://REDACTED:11434"
+}

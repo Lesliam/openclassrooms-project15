@@ -1,0 +1,49 @@
+# coach-terminal-faces-bitmap.yaml — A/B build "Style B: bitmap face".
+#
+# Includes the shared base (hardware + UI state machine) and adds a display that
+# blits pre-rendered 1-bit face frames (faces/face_*.png, produced by
+# faces_gen.py). Animated states alternate two frames via millis(). No geometry
+# is drawn at runtime, so the look is exactly what faces_gen.py exported.
+#
+# Regenerate the frames after editing faces_gen.py:  python faces_gen.py
+# Flash:  sg uucp -c 'PYTHONUNBUFFERED=1 esphome run coach-terminal-faces-bitmap.yaml --device /dev/ttyACM0'
+# The face renders for ui_state 1-4; boot (0) and error (5) fall back to text.
+
+packages:
+  base: !include coach-terminal-base.yaml
+
+image:
+  - { file: faces/face_idle.png,        id: img_idle,        type: BINARY }
+  - { file: faces/face_blink.png,       id: img_blink,       type: BINARY }
+  - { file: faces/face_listen.png,      id: img_listen,      type: BINARY }
+  - { file: faces/face_think1.png,      id: img_think1,      type: BINARY }
+  - { file: faces/face_think2.png,      id: img_think2,      type: BINARY }
+  - { file: faces/face_talk_open.png,   id: img_talk_open,   type: BINARY }
+  - { file: faces/face_talk_closed.png, id: img_talk_closed, type: BINARY }
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 150ms
+    lambda: |-
+      const uint32_t t = millis();
+      switch (id(ui_state)) {
+        case 1:  // idle / ready (blink)
+          it.image(0, 0, (t % 4000) < 150 ? id(img_blink) : id(img_idle));
+          break;
+        case 2:  // listening
+          it.image(0, 0, id(img_listen));
+          break;
+        case 3:  // thinking (alternate the two dot frames)
+          it.image(0, 0, ((t / 400) % 2 == 0) ? id(img_think1) : id(img_think2));
+          break;
+        case 4:  // talking (mouth flap)
+          it.image(0, 0, ((t / 250) % 2 == 0) ? id(img_talk_open) : id(img_talk_closed));
+          break;
+        default:  // 0 boot, 5 error -> diagnostic text screen
+          it.print(0, 0, id(font_big), "Coach FR");
+          it.printf(0, 26, id(font_small), "%s", id(coach_state).c_str());
+          it.printf(0, 48, id(font_small), "up: %.0f s", id(uptime_s).state);
+          break;
+      }

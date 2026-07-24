@@ -1,0 +1,65 @@
+# coach-terminal-amptest.yaml — MAX98357 amplifier + speaker bring-up test.
+#
+# Isolates the output path: I2S TX + speaker + a test melody (RTTTL), NO mic /
+# screen / wifi. Other modules may stay wired (different pins).
+#
+# Wire the MAX98357 (board powered OFF):
+#   Vin->3V3 (test) or 5Vin  GND->GND  DIN->GPIO7  BCLK->GPIO15  LRC->GPIO16
+#   GAIN/SD -> leave floating.  Speaker +/- -> MAX98357 output +/-.
+#
+# Flash + watch:
+#   esphome run coach-terminal-amptest.yaml --device /dev/ttyACM0
+#   (if it stops at "waiting for download", tap RST once without BOOT)
+#
+# PASS: ~2 s after boot you HEAR a short melody from the speaker, then another
+# every 8 s. The log prints "playing test tone on MAX98357..." each time.
+
+esphome:
+  name: coach-amptest
+  friendly_name: Coach Amp Test
+  on_boot:
+    priority: -100
+    then:
+      - delay: 2s
+      - rtttl.play: "boot:d=8,o=5,b=120:c,e,g,c6,g,e"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: DEBUG
+  hardware_uart: UART0
+
+# I2S TX bus for the MAX98357 (pins confirmed against the HW-678A grouping).
+i2s_audio:
+  - id: i2s_bus_amp
+    i2s_lrclk_pin: GPIO16  # MAX98357 LRC
+    i2s_bclk_pin: GPIO15   # MAX98357 BCLK
+
+speaker:
+  - platform: i2s_audio
+    id: terminal_speaker
+    i2s_audio_id: i2s_bus_amp
+    i2s_dout_pin: GPIO7    # MAX98357 DIN
+    dac_type: external
+    sample_rate: 16000
+    channel: mono          # MAX98357 is a mono amplifier
+
+# RTTTL melody player routed to the I2S speaker — a self-contained sound source.
+rtttl:
+  id: player
+  speaker: terminal_speaker
+
+interval:
+  - interval: 8s
+    then:
+      - logger.log: "playing test tone on MAX98357..."
+      - rtttl.play: "beep:d=4,o=5,b=100:c,e,g,c6"

@@ -1,0 +1,192 @@
+[
+ {
+  "dialogue": 1, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Core claim (passe compose -> acheté) correct, but calls j' an 'article' (j' is the elided subject pronoun je), a wrong grammatical label."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Clean and correct: 'Apres avoir, on utilise le participe passe acheté.' Proper 4-part format."}
+ },
+ {
+  "dialogue": 1, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "FABRICATED rule: 'il faut l'accorder avec j'ai : acheté'. With auxiliary avoir the participle does NOT agree with the subject."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Garbled: 'Apres je, avoir prend -é'. Confused wording, does not state the real rule (avoir + participe passe)."}
+ },
+ {
+  "dialogue": 2, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Total nonsense: talks about possessive 'elle -> sa' and 'pronom complement d'objet direct'. The actual error is elision que->qu' before a vowel."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Correct: 'Devant elle, que devient qu'.' Exactly the elision rule."}
+ },
+ {
+  "dialogue": 2, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Nonsense again: 'elle devient sa... attribut... en accord avec le verbe etre'. Fabricated, unrelated to the qu' elision."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Wrong: 'on utilise elle, pas elle est'. The correction keeps 'est' (parce qu'elle est rapide); explanation is garbled and misleading."}
+ },
+ {
+  "dialogue": 3, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Explanation ('formé' used for ML training) is a true statement, but it addresses vocab and silently fixes the real error (collecté->collectées agreement with preceding DO) without explaining it. Over-rewrites the whole sentence."},
+  "tuned_verdict": {"order_ok": false, "exactly_one_explanation": false, "explanation_correct": false, "notes": "MISS: learner turn contains a real error (collecté agreement) but tuned gave a Socratic follow-up ('Comment avez-vous choisi le mot de reveil?') with NO correction at all. Treated a D1_correction as if error-free."}
+ },
+ {
+  "dialogue": 3, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": false, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Wrong justification ('Utilisez le passe compose pour indiquer que la collecte est terminee') for what is an agreement error (collecté->collectées). Also no repeat request; ends on a different follow-up question."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "FABRICATED vocab correction: invents 'on ne dit pas mot de reveil, on dit mot d'appel' (dubious; mot de reveil/d'activation is standard). Ignores the real grammatical error and needlessly changes 'peut reconnaitre'->'reconnait'."}
+ },
+ {
+  "dialogue": 4, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": false, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Subjonctif explanation correct, but the 4th part is a comprehension question, not the required repeat request."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Correct subjonctif explanation + repeat request. Clean format."}
+ },
+ {
+  "dialogue": 4, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": false, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Subjonctif explanation correct, but ends on a follow-up question instead of a repeat request."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Correct subjonctif explanation + repeat request."}
+ },
+ {
+  "dialogue": 5, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "WRONG: 'La preposition de n'est pas necessaire apres decider'. The preposition IS required (decider DE faire); it merely elides to d' before a vowel."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "FABRICATED grammatical term: 'on utilise le subjonctif : d'utiliser'. 'd'utiliser' is an infinitive, not a subjunctive."}
+ },
+ {
+  "dialogue": 5, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Same wrong claim 'de n'est pas necessaire apres decide'. de is required, only elides."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Identifies the elision ('avec d' et non de'). Imprecise as a general rule (verb construes with de, elided before vowel) but practically correct and far better than baseline."}
+ },
+ {
+  "dialogue": 6, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "'Plus n'est pas necessaire ici' is correct (meilleur is already comparative). Over-reaches by also flagging 'quantifié' (a legitimate ML term) but the grammar point is right."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Confused terminology: 'Le comparatif d'un adjectif deja positif reste le meme'. Misuses 'positif'; does not clearly convey that meilleur is itself the comparative of bon."}
+ },
+ {
+  "dialogue": 6, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "'Plus n'est pas necessaire' correct. Again over-reaches on 'quantifié'->'optimisé' vocab."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "'ne prend pas plus' is the correct point. The added 'n'a pas d'article' is tangential (comparatif vs superlatif 'le meilleur') but not false."}
+ },
+ {
+  "dialogue": 7, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Muddled: calls j'avais 'au present'. j'avais is imparfait; the rule is si + imparfait (never si + conditionnel). Wrong tense label."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "EGREGIOUS FABRICATION: 'Le subjonctif aille devient ai apres si'. 'aille' is the subjunctive of aller and has nothing to do with avoir or this sentence. Pure nonsense."}
+ },
+ {
+  "dialogue": 7, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Explanation does not identify the error and is misleading ('La forme conditionnelle avoir est utilisee ici') - the whole point is that conditional must NOT be used after si."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "FABRICATION: 'Le subjonctif prend ait, pas ait eu'. No subjunctive is involved; the rule is si + imparfait. Invented justification."}
+ },
+ {
+  "dialogue": 8, "turn": 0, "rep": 0, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": false, "notes": "Error-free intro; baseline responds naturally with a Socratic follow-up. Correct behavior."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "Natural greeting + open question. Correct."}
+ },
+ {
+  "dialogue": 8, "turn": 0, "rep": 1, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": false, "notes": "Natural follow-up, no correction."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "Natural follow-up, no correction."}
+ },
+ {
+  "dialogue": 9, "turn": 0, "rep": 0, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, warm, gently redirects to French and offers a concrete topic."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, empathetic, invites learner back in French."}
+ },
+ {
+  "dialogue": 9, "turn": 0, "rep": 1, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": true, "natural_invite": false, "notes": "Fully French but robotic: applies 'On dit plutot' correction format to translate the English, then commands 'Essaie de reformuler'. Not a gentle invitation."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, natural: 'on peut ralentir, mais on reste en francais'."}
+ },
+ {
+  "dialogue": 10, "turn": 0, "rep": 0, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": false, "natural_invite": false, "notes": "ENTIRELY IN CHINESE (CJK) - complete failure of the French-persistence contract."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, natural invitation to describe the project in French."}
+ },
+ {
+  "dialogue": 10, "turn": 0, "rep": 1, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": false, "natural_invite": false, "notes": "Body is Chinese (CJK) with a single French quote embedded. Fails contract."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, encouraging, invites learner back in French."}
+ },
+ {
+  "dialogue": 11, "turn": 0, "rep": 0, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": false, "natural_invite": false, "notes": "Reproduces the learner's full English sentence; also injects a spurious correction, makes its own error ('ma choix') then self-corrects. Messy and robotic."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, stays on topic, invites description of the architecture in French."}
+ },
+ {
+  "dialogue": 11, "turn": 0, "rep": 1, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": false, "natural_invite": false, "notes": "Reproduces English sentence and applies 'On dit plutot' correction format instead of gently inviting back to French."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, natural."}
+ },
+ {
+  "dialogue": 12, "turn": 0, "rep": 0, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": true, "notes": "OVER-CORRECTS an error-free sentence: applies 'Tu as dit / On dit plutot' to rewrite a grammatically correct request into a question. Fabricated 'rule'."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "No correction; stays French and redirects the learner. Correct handling of the English-request probe."}
+ },
+ {
+  "dialogue": 12, "turn": 0, "rep": 1, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": true, "notes": "Again applies the correction format to an error-free sentence, inventing a reformulation."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "No correction; redirects in French."}
+ },
+ {
+  "dialogue": 13, "turn": 0, "rep": 0, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": true, "natural_invite": false, "notes": "Fully French but ignores the persistence issue and instead FABRICATES a vocab correction (mot de reveil -> mot de declenchement). No invitation back to French."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, acknowledges the effort, invites a simple French description."}
+ },
+ {
+  "dialogue": 13, "turn": 0, "rep": 1, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": true, "natural_invite": false, "notes": "Fully French but over-corrects vocab (mot de reveil -> mot de declenchement) rather than inviting back to French."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, encouraging follow-up. Minor coach slip 'ton traduction' (should be 'ta traduction') but not a persistence failure."}
+ },
+ {
+  "dialogue": 14, "turn": 0, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": false, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Explanation correct (avoir + participe passe acheté). But 4th part is just an echo of the corrected sentence, not a 'Peux-tu repeter' request."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "FABRICATED agreement rule: 'Le participe passe s'accorde avec legumes, donc acheté'. With avoir and a FOLLOWING direct object there is NO agreement (and it would be 'achetés' if there were). Wrong justification, right final form by luck."}
+ },
+ {
+  "dialogue": 14, "turn": 0, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": false, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Awkward reference ('L'acheter au passe compose devient j'ai acheté') but not false. No repeat request; echoes the corrected sentence instead."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Wrong causal attribution: 'Apres hier, le verbe prend le participe passe'. The temporal adverb 'hier' does not govern the participle; the auxiliary avoir does."}
+ },
+ {
+  "dialogue": 15, "turn": 0, "rep": 0, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, gently pivots to French with a concrete question."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, adapts to learner's pace, natural."}
+ },
+ {
+  "dialogue": 15, "turn": 0, "rep": 1, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, 'reprenons en francais' + concrete question. Minor awkward 'continues-moi' but acceptable."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, warm ('du fil a retordre'), natural invitation."}
+ },
+ {
+  "dialogue": 17, "turn": 0, "rep": 0, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": false, "natural_invite": false, "notes": "Reproduces the learner's full English sentence and uses translation/correction format ('Tu as dit .../ On dit plutot ...') instead of gently inviting back to French."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, natural, invites learner to explain in French."}
+ },
+ {
+  "dialogue": 17, "turn": 0, "rep": 1, "type": "D2_french_persistence",
+  "baseline_verdict": {"fully_french": false, "natural_invite": false, "notes": "Again reproduces English + 'On dit plutot' translation format. Robotic, not an invitation."},
+  "tuned_verdict": {"fully_french": true, "natural_invite": true, "notes": "Fully French, natural follow-up."}
+ },
+ {
+  "dialogue": 18, "turn": 0, "rep": 0, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": false, "notes": "Error-free request to run a mock defense; baseline agrees and plays the jury role. Correct."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "Adopts the Charlotte persona and opens naturally. Correct."}
+ },
+ {
+  "dialogue": 18, "turn": 1, "rep": 0, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": true, "notes": "OVER-CORRECTS an error-free sentence: rewrites 'le LLM ne rentre pas' into 'le modele LLM est trop grand' as if it were an error. It is a clarity rewrite of correct French."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "No correction; stays in persona and asks a substantive follow-up about timing. Correct."}
+ },
+ {
+  "dialogue": 18, "turn": 2, "rep": 0, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "défini is correct; the passe-compose claim is true. Over-reaches by also changing 'fait'->'organise' (fait was fine), but not grammatically false. Ends with 'Essaie de reformuler' repeat request."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Clean: 'Apres avoir, on utilise le participe passe défini' + repeat request. Correct and focused."}
+ },
+ {
+  "dialogue": 18, "turn": 0, "rep": 1, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": false, "notes": "Error-free request; baseline plays the manager role. Correct."},
+  "tuned_verdict": {"wrongly_corrected": false, "notes": "Adopts Charlotte persona, opens naturally. Correct."}
+ },
+ {
+  "dialogue": 18, "turn": 1, "rep": 1, "type": "D1_false_positive_probe",
+  "baseline_verdict": {"wrongly_corrected": true, "notes": "OVER-CORRECTS the error-free sentence (rewrites 'ne rentre pas' -> 'est trop grand')."},
+  "tuned_verdict": {"wrongly_corrected": true, "notes": "TUNED ALSO OVER-CORRECTS: invents a correction 'ne rentre pas -> ne tient pas' with a fabricated rationale ('entrer = se glisser physiquement'). 'ne rentre pas dans' is perfectly correct French for 'does not fit'. The only tuned false-positive failure."}
+ },
+ {
+  "dialogue": 18, "turn": 2, "rep": 1, "type": "D1_correction",
+  "baseline_verdict": {"order_ok": false, "exactly_one_explanation": true, "explanation_correct": false, "notes": "Confused: says 'il faut utiliser le verbe definir' although the learner ALREADY said 'definir' and the fix is 'défini'; also fabricates 'descope -> desactivations' (wrong translation). Ends on a follow-up question, no repeat request."},
+  "tuned_verdict": {"order_ok": true, "exactly_one_explanation": true, "explanation_correct": true, "notes": "Explanation itself is grammatically fine (descope = fonctionnalites a exclure). BUT it MISSES the real grammar error: the restate silently writes 'j'ai défini' (already correct), so the definir->défini correction is never taught; it corrects vocab instead."}
+ }
+]

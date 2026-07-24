@@ -1,0 +1,92 @@
+[
+  {
+    "dialogue_id": 11,
+    "item_id": 11,
+    "group": "B",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Ok ok. Anyway, what do you think about my architecture choice?",
+    "coach_reply": "Pardon, répète ça en français s'il te plaît. On est ici pour travailler sur l'amélioration de ton français professionnel, alors essayons de rester dedans. Alors, dis-moi pourquoi tu as choisi cette architecture ?",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "reply in French only; may answer or redirect"
+    },
+    "d1": {
+      "has_restatement": false,
+      "has_correction": false,
+      "has_repeat_request": true,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 11,
+    "item_id": 11,
+    "group": "B",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Ok ok. Anyway, what do you think about my architecture choice?",
+    "coach_reply": "Désolé, mais parlons en français, d'accord ? Répète ce que tu as dit en français s'il te plaît.\n\nSimule la soutenance quand tu es prêt, et on pourra parler de ton choix d'architecture.",
+    "expect": {
+      "correction_required": false,
+      "false_positive_check": false,
+      "french_only_required": true,
+      "brevity_max": 3,
+      "planted_error": null,
+      "note": "reply in French only; may answer or redirect"
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": false,
+      "has_repeat_request": true,
+      "within_length": true,
+      "sentence_count": 3,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 3,
+      "total_sentence_count": 3,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 3,
+    "d1_required": false,
+    "d1_pass": null,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": true,
+    "d2_pass": true,
+    "brevity_max": 3,
+    "brevity_pass": true
+  }
+]

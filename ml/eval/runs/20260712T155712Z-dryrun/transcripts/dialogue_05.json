@@ -1,0 +1,92 @@
+[
+  {
+    "dialogue_id": 5,
+    "item_id": 5,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 0,
+    "seed": 42,
+    "learner_text": "Nous avons décidé de utiliser un microcontrôleur ESP32.",
+    "coach_reply": "Tu as dit : \"Nous avons décidé de utiliser un microcontrôleur ESP32.\"\nOn dit plutôt : \"Nous avons choisi d'utiliser un microcontrôleur ESP32.\"\n\nPourquoi ce choix spécifique ? Quelles sont les raisons techniques pour opter pour l'ESP32 dans votre projet ?",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'de utiliser' missing elision -> 'd'utiliser'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": false,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  },
+  {
+    "dialogue_id": 5,
+    "item_id": 5,
+    "group": "A",
+    "kind": "simple",
+    "turn_index": 0,
+    "depth": null,
+    "repetition": 1,
+    "seed": 43,
+    "learner_text": "Nous avons décidé de utiliser un microcontrôleur ESP32.",
+    "coach_reply": "Tu as dit : \"Nous avons décidé de utiliser un microcontrôleur ESP32.\"\nOn dit plutôt : \"Nous avons choisi d'utiliser un microcontrôleur ESP32.\"\n\nPourquoi ce choix précis ? Quelles sont les fonctionnalités spécifiques de l'ESP32 qui vous intéressent pour votre projet ?",
+    "expect": {
+      "correction_required": true,
+      "false_positive_check": false,
+      "french_only_required": false,
+      "brevity_max": 4,
+      "planted_error": "'de utiliser' missing elision -> 'd'utiliser'",
+      "note": ""
+    },
+    "d1": {
+      "has_restatement": true,
+      "has_correction": true,
+      "has_repeat_request": false,
+      "within_length": true,
+      "sentence_count": 4,
+      "deterministic_compliant": false
+    },
+    "d2": {
+      "passes": true,
+      "has_cjk": false,
+      "french_sentence_count": 4,
+      "total_sentence_count": 4,
+      "french_token_fraction": 1.0,
+      "non_french_sentences": []
+    },
+    "sentence_count": 4,
+    "d1_required": true,
+    "d1_pass": false,
+    "false_positive_check": false,
+    "false_positive_triggered": null,
+    "french_only_required": false,
+    "d2_pass": null,
+    "brevity_max": 4,
+    "brevity_pass": true
+  }
+]

@@ -1,0 +1,83 @@
+# coach-terminal-mictest.yaml — INMP441 microphone bring-up test.
+#
+# Isolates the mic path: I2S RX + micro_wake_word, NO amp / wifi / HA. Say the
+# wake word "okay nabu" -> the RGB flashes blue + a log line prints = the mic,
+# the I2S wiring, and the on-device KWS all work.
+#
+# Wire the INMP441 first (board powered OFF):
+#   VDD->3V3  GND->GND  L/R->GND(left)  WS->GPIO4  SCK->GPIO5  SD->GPIO6
+#
+# Flash + watch:
+#   esphome run coach-terminal-mictest.yaml --device /dev/ttyACM0
+#   (first build downloads the okay_nabu model; if it stops at
+#    "waiting for download", tap RST once without BOOT)
+#
+# PASS: say "okay nabu" -> "WAKE WORD DETECTED" log + blue RGB flash.
+# Also check the boot log: the microphone/I2S component must init with no error.
+
+esphome:
+  name: coach-mictest
+  friendly_name: Coach Mic Test
+  on_boot:
+    priority: -100
+    then:
+      - micro_wake_word.start:
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: DEBUG
+  hardware_uart: UART0
+
+# I2S RX bus for the INMP441 (pins confirmed against the HW-678A manual).
+i2s_audio:
+  - id: i2s_bus_mic
+    i2s_lrclk_pin: GPIO4   # INMP441 WS
+    i2s_bclk_pin: GPIO5    # INMP441 SCK
+
+microphone:
+  - platform: i2s_audio
+    id: terminal_mic
+    i2s_audio_id: i2s_bus_mic
+    i2s_din_pin: GPIO6     # INMP441 SD
+    adc_type: external
+    pdm: false             # INMP441 is standard I2S, not PDM
+    channel: left          # requires L/R tied to GND on the module
+    sample_rate: 16000
+    bits_per_sample: 32bit # INMP441: 24-bit data in a 32-bit I2S frame
+
+# On-device wake word. Placeholder stock model for the mic bring-up; the custom
+# "hello lingorm" model replaces it later (dev-kws pipeline).
+micro_wake_word:
+  id: kws
+  microphone: terminal_mic
+  models:
+    - model: okay_nabu
+  on_wake_word_detected:
+    - light.turn_on:
+        id: status_led
+        red: 0%
+        green: 0%
+        blue: 100%
+    - logger.log: "WAKE WORD DETECTED -- mic + I2S + KWS all working!"
+    - delay: 1s
+    - light.turn_off: status_led
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO48
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    default_transition_length: 0s

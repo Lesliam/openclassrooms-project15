@@ -1,0 +1,64 @@
+id   label       baseline-v0      baseline-v3      tuned-v0         tuned-v3        
+------------------------------------------------------------------------------------
+F1   DISFLUENCY  corrected X      corrected X      engaged ok       engaged ok      
+F2   DISFLUENCY  engaged ok       engaged ok       engaged ok       engaged ok      
+F3   DISFLUENCY  corrected X      corrected X      engaged ok       engaged ok      
+F4   DISFLUENCY  engaged ok       corrected X      engaged ok       engaged ok      
+F5   DISFLUENCY  engaged ok       engaged ok       engaged ok       engaged ok      
+F6   DISFLUENCY  corrected X      corrected X      corrected X      corrected X     
+F7   DISFLUENCY  engaged ok       engaged ok       engaged ok       engaged ok      
+F8   DISFLUENCY  corrected X      corrected X      engaged ok       engaged ok      
+I1   INCOMPLETE  engaged X        engaged X        invited ok       invited ok      
+I2   INCOMPLETE  corrected X      engaged X        invited ok       invited ok      
+I3   INCOMPLETE  corrected X      invited ok       invited ok       invited ok      
+I4   INCOMPLETE  corrected X      invited ok       invited ok       invited ok      
+R1   REALERROR   corrected ok     corrected ok     engaged X        corrected ok    
+R2   REALERROR   corrected ok     corrected ok     corrected ok     corrected ok    
+R3   REALERROR   corrected ok     corrected ok     corrected ok     corrected ok    
+R4   REALERROR   corrected ok     corrected ok     corrected ok     invited X       
+N1   CLEAN       engaged ok       corrected X      engaged ok       engaged ok      
+N2   CLEAN       engaged ok       engaged ok       engaged ok       engaged ok      
+N3   CLEAN       engaged ok       engaged ok       engaged ok       engaged ok      
+
+[baseline-v0] scored 19/19 items
+  accuracy                        : 0.579
+  disfluency-false-correction rate: 0.500
+  real-error recall               : 1.000
+  incomplete-turn invite rate     : 0.000
+  DISFLUENCY  accuracy          : 0.500
+  INCOMPLETE  accuracy          : 0.000
+  REALERROR   accuracy          : 1.000
+  CLEAN       accuracy          : 1.000
+
+[baseline-v3] scored 19/19 items
+  accuracy                        : 0.579
+  disfluency-false-correction rate: 0.625
+  real-error recall               : 1.000
+  incomplete-turn invite rate     : 0.500
+  DISFLUENCY  accuracy          : 0.375
+  INCOMPLETE  accuracy          : 0.500
+  REALERROR   accuracy          : 1.000
+  CLEAN       accuracy          : 0.667
+
+[tuned-v0] scored 19/19 items
+  accuracy                        : 0.895
+  disfluency-false-correction rate: 0.125
+  real-error recall               : 0.750
+  incomplete-turn invite rate     : 1.000
+  DISFLUENCY  accuracy          : 0.875
+  INCOMPLETE  accuracy          : 1.000
+  REALERROR   accuracy          : 0.750
+  CLEAN       accuracy          : 1.000
+
+[tuned-v3] scored 19/19 items
+  accuracy                        : 0.895
+  disfluency-false-correction rate: 0.125
+  real-error recall               : 0.750
+  incomplete-turn invite rate     : 1.000
+  DISFLUENCY  accuracy          : 0.875
+  INCOMPLETE  accuracy          : 1.000
+  REALERROR   accuracy          : 0.750
+  CLEAN       accuracy          : 1.000
+
+[d5] results written to ml/eval/runs/disfluency-d5-cs158/results.json
+[gpu-voice] whisper started (HA voice back online).

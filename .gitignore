@@ -1,0 +1,13 @@
+# Vendor board reference (HW-678A datasheet, WS2812 lib, factory demo bin) - not redistributed
+firmware/board-reference/
+
+# ESPHome secrets (wifi/api/ota) — PUBLIC mirror, never commit real creds
+firmware/esphome/secrets.yaml
+# ESPHome build artifacts (toolchain, compiled objects)
+firmware/esphome/.esphome/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

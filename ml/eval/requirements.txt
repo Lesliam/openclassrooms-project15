@@ -1,0 +1,7 @@
+# Evaluation harness dependencies (pinned for reproducibility).
+# Install into ml/eval/.venv (see README.md).
+requests==2.32.3
+langdetect==1.0.9
+
+# --- dev dependencies (test harness only; not needed for a baseline run) ---
+pytest==9.1.1

@@ -1,0 +1,31 @@
+# microWakeWord training image for RTX 5080 (Blackwell, sm_120).
+#
+# Base: NVIDIA official TensorFlow container (nvcr.io), CUDA 12.8 / cuDNN 9.7 /
+# TF 2.17.0 -- the only provenance-clean route that natively drives sm_120.
+# The container's numpy (1.26.4) and tensorflow (2.17.0) are frozen via a
+# constraints file so no microWakeWord dependency can upgrade them and break the
+# Blackwell-enabled GPU build. microWakeWord itself is installed at run time as
+# an editable package from the mounted source tree.
+FROM nvcr.io/nvidia/tensorflow:25.02-tf2-py3@sha256:d78d5b31b7e6cd9c902e98f73a977fcdce9d47d0bc1c685b3fa94f4187e6301c
+
+COPY container-constraints.txt /opt/container-constraints.txt
+
+RUN pip install --no-cache-dir -c /opt/container-constraints.txt \
+        ai-edge-litert \
+        audio_metadata \
+        audiomentations \
+        datasets \
+        librosa \
+        mmap_ninja \
+        numpy-minmax \
+        numpy-rms \
+        pymicro-features \
+        pyyaml \
+        soundfile \
+        webrtcvad-wheels
+
+# microWakeWord's streaming-inference export uses Keras 3 APIs (keras.ops,
+# clone_model with input_tensors) that require a newer Keras than the container's
+# default 3.3.2. 3.6.0 matches the Keras shipped with TF 2.18 (microWakeWord's
+# declared floor). tf.keras is switched to Keras 3 via TF_USE_LEGACY_KERAS=0.
+RUN pip install --no-cache-dir -c /opt/container-constraints.txt -U "keras==3.6.0"

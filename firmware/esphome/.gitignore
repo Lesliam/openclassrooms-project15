@@ -1,0 +1,9 @@
+# Gitignore settings for ESPHome
+# This is an example and may include too much for your use-case.
+# You can modify this file to suit your needs.
+/.esphome/
+/secrets.yaml
+# esphome imports the local external_components as python modules, which drops
+# __pycache__ inside components/voice_assistant/ on every config/compile run.
+__pycache__/
+.ruff_cache/

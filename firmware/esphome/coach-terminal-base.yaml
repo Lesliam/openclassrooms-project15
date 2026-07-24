@@ -125,7 +125,7 @@ wifi:
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
-      bssid: 3A:07:16:8B:5F:74
+      bssid: !secret wifi_bssid
   # Freebox broadcasts a HIDDEN SSID: fast_connect skips the scan and associates
   # directly; power_save_mode:none stops the modem-sleep beacon misses.
   fast_connect: true
@@ -134,7 +134,7 @@ wifi:
   # LEAVES the current AP when a sibling BSSID measures >=10 dB stronger,
   # ignoring the bssid pin above. With the RF swing next to the PC (-53 to
   # -72 dB observed while stationary, 2026-07-22) that turned one transient
-  # fade into a 56 s outage cascade: "Roaming to 3A:07:16:22:22:80 (+17 dB)"
+  # fade into a 56 s outage cascade: "Roaming to <BSSID-B> (+17 dB)"
   # -> Association Leave -> roam failed -> full adapter restart loop. A
   # successful roam would also persist the roamed-to BSSID as the next boot's
   # fast_connect target, defeating the pin across reboots. Disable it; the
@@ -147,8 +147,8 @@ wifi:
   # Optional static IP (uncomment + CONFIRM your Freebox gateway before use — a
   # wrong gateway makes the device unreachable, needing a serial re-flash):
   # manual_ip:
-  #   static_ip: 192.168.1.75
-  #   gateway: 192.168.1.254    # <-- CONFIRM: your Freebox LAN gateway IP
+  #   static_ip: <DEVICE_IP>
+  #   gateway: <GATEWAY_IP>    # <-- CONFIRM: your Freebox LAN gateway IP
   #   subnet: 255.255.255.0
   ap:
     ssid: "Coach-Terminal Fallback"

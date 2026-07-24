@@ -345,8 +345,8 @@ off the card entirely and leaves wyoming-whisper untouched):
 
 ```bash
 cd ~/dev/coach-kws
-PSG=/home/yang/wsl-home-yang/dev/coach-kws/psg-src
-GENPY=/home/yang/wsl-home-yang/dev/coach-kws/.venv-gen/bin/python
+PSG=$HOME/dev/coach-kws/psg-src
+GENPY=$HOME/dev/coach-kws/.venv-gen/bin/python
 
 M=$PSG/models/fr_onnx
 
@@ -370,7 +370,7 @@ ls data/positives_jai_fini/*.wav | wc -l    # confirm the survivor count
 
 # 3. MANDATORY intelligibility gate on a random sample of at least 20 clips.
 #    Requires >= 90 % matching "j'ai fini" before the corpus may be used.
-/home/yang/wsl-home-yang/voice-services/.venv/bin/python - <<'PY'
+$HOME/voice-services/.venv/bin/python - <<'PY'
 from faster_whisper import WhisperModel
 from pathlib import Path
 import random, re

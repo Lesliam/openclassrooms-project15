@@ -68,16 +68,16 @@ Every observed drop had `dev=DOWN ha=UP` — the HA side never failed. The
 in-window drop is one 56 s cascade, device-initiated (serial excerpt):
 
 ```
-22:00:03.817 [I][wifi:2495]: Roaming to 3A:07:16:22:22:80 (+17 dB)
-22:00:03.861 [W][wifi_esp32:803]: Disconnected ssid='Freebox-1EFAD1'
-             bssid=3A:07:16:8B:5F:74 reason='Association Leave'
+22:00:03.817 [I][wifi:2495]: Roaming to <BSSID-B> (+17 dB)
+22:00:03.861 [W][wifi_esp32:803]: Disconnected ssid='<SSID>'
+             bssid=<BSSID-A> reason='Association Leave'
 22:00:03.883 [D][wifi:2112]: Roam failed, reconnecting (attempt 2/3)
 22:00:20-32  (summarised) four HA TCP accepts each die "Network down; disconnect"
 22:00:34.876 [E][wifi:1442]: Scan timeout
-22:00:34.909 Disconnected bssid=3A:07:16:22:22:80 reason='Association Leave'
+22:00:34.909 Disconnected bssid=<BSSID-B> reason='Association Leave'
 22:00:34.929 [W][wifi:736]: Restarting adapter
-22:00:38.059 scan: 'Freebox-1EFAD1' (3A:07:16:8B:5F:74) Ch:11 -72dB
-22:00:56.675 Connected, BSSID 3A:07:16:8B:5F:74, -70 dB
+22:00:38.059 scan: '<SSID>' (<BSSID-A>) Ch:11 -72dB
+22:00:56.675 Connected, BSSID <BSSID-A>, -70 dB
 22:00:59     (ping probe, not serial) dev=UP ha=UP — full recovery
 ```
 

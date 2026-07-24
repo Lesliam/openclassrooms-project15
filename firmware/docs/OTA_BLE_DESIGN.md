@@ -2,10 +2,9 @@
 
 Document de conception. La mise à jour à distance par BLE a été **réduite à une
 conception documentée** en semaine 1 par l'échelle de réduction de périmètre du
-sprint (voir `planning.md` et le §4.1 du rapport de conduite de projet) :
-l'implémentation n'est pas réalisée dans cette itération, le flash reste manuel
-et la mise à jour Wi-Fi existante suffit au MVP. Ce document fige la conception
-pour qu'elle puisse être reprise sans re-décision.
+sprint : l'implémentation n'est pas réalisée dans cette itération, le flash
+reste manuel et la mise à jour Wi-Fi existante suffit au MVP. Ce document fige
+la conception pour qu'elle puisse être reprise sans re-décision.
 
 Sauf mention contraire, les faits matériels et de configuration cités
 proviennent de la configuration effectivement construite pour le terminal

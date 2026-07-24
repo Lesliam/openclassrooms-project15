@@ -129,3 +129,34 @@ END_WORD_TRAILING_PATTERN with observed mistranscription variants and/or
 bias the whisper initial_prompt with the end phrase. The latter was the
 deliberately-deferred half of the 2026-07-22 Lingorm initial_prompt fix
 ("only if residuals appear") — that trigger condition is now met.
+
+## Addendum 2026-07-24 — R2 residual CLOSED, live validation PASS
+
+Both halves of the R2 fix were implemented (session 27) and deployed to the
+NAS on 2026-07-24 (md5 of const.py f9ba3f9865584fc0ac16781cb5e64ffc and
+stt.py f7db691d8fece084e955bcda079d8b34 identical repo-side and NAS-side,
+__pycache__ purged, hass restarted, HA back up in ~30 s):
+
+- coach_stt END_WORD_TRAILING_PATTERN extended with the observed « réfinis »
+  variant, restructured against catastrophic backtracking (linear single
+  attempt, quadratic sub(), timing regression tests), plus NFC normalisation
+  of the transcript (commits 1016522 / 3ddcae3 / 825b51b, merged 496af24).
+- wyoming-whisper --initial-prompt extended with the end phrase (unit backup
+  .bak-20260722-r2); piper->whisper roundtrip 5/5 non-regression.
+
+Live validation (owner, real voice, 4 turns, 2026-07-24 evening):
+
+| Turn | Transcript tail (whisper.log) | Result |
+|---|---|---|
+| 1 | « Comment vas-tu ? J'ai fini. » | stripped, normal coach reply |
+| 2 | « ... J'ai fini. J'ai fini. J'ai fini. » (3x run) | stripped, normal reply |
+| 3 | « ... J'ai fini. J'ai fini. » (2x run) | stripped, normal reply |
+| 4 | « Je vais bientot finir le test complet ... J'ai fini. » | mid-sentence "finir" preserved, trailing end word stripped, normal reply |
+
+No « Réfinis » mistranscription reproduced post-prompt-extension; no farewell
+misfire; the repeated-run turns exercise exactly the input class that the
+round-1 regex would have exploded on. PASS.
+
+Known unrelated residual observed during the run: « entretien d'embauche »
+mistranscribed as « anthracien dans la bouche » (content-level accent error,
+coach coped; candidate for a future initial-prompt addition, not part of R2).

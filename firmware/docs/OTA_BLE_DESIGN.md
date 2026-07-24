@@ -17,7 +17,10 @@ Le terminal dispose déjà d'une mise à jour OTA par Wi-Fi : composant `ota`
 d'ESPHome, plateforme `esphome`, protégée par mot de passe
 (`coach-terminal-base.yaml`, section `ota`). Cette voie est suffisante en
 usage nominal — l'appareil est sur le réseau local du foyer et flashé depuis le
-poste de développement.
+poste de développement. Elle a été **vérifiée en fonctionnement le 2026-07-24** :
+téléversement du binaire de production (1,28 Mo) sur le port 3232 en 4,9 s,
+compte rendu `OTA successful`, puis redémarrage et retour en ligne automatiques
+de l'appareil (API et mDNS rétablis sans intervention série).
 
 Une voie BLE complémentaire répond à trois situations que la voie Wi-Fi ne
 couvre pas :

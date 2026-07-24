@@ -1,7 +1,7 @@
 # Coach STT — deployment on the Home Assistant instance (Synology NAS)
 
 Custom integration providing a speech-to-text entity that proxies the existing
-`wyoming-faster-whisper` service (`tcp://192.168.1.37:10300`) and declares
+`wyoming-faster-whisper` service (`tcp://<AI_HOST_IP>:10300`) and declares
 `requires_external_vad=False`.
 
 Effect: `assist_pipeline` skips `VoiceCommandSegmenter` for this entity, so
@@ -15,7 +15,7 @@ findings F4, F5, F7 for the source references.
   does not exist before that release, and on 2026.4.x the pipeline gates the
   segmenter on `is_vad_enabled` alone, which a satellite cannot set. The code
   here was written against the 2026.7.3 API.
-- The Wyoming ASR service reachable from Home Assistant at `192.168.1.37:10300`.
+- The Wyoming ASR service reachable from Home Assistant at `<AI_HOST_IP>:10300`.
 - The `wyoming` Python package: already a Home Assistant dependency. The manifest
   pins `wyoming==1.9.0`, the exact version core 2026.7.3 pins, so the requirement
   is already satisfied and nothing extra is downloaded. See the upgrade section
@@ -35,7 +35,7 @@ findings F4, F5, F7 for the source references.
    # from a machine that can reach the NAS; adjust the destination to the
    # actual Home Assistant config path on that host
    scp -r server/ha_custom_components/coach_stt \
-       <user>@192.168.1.100:<ha_config_dir>/custom_components/
+       <user>@<NAS_IP>:<ha_config_dir>/custom_components/
    ```
 
    Result: `<ha_config_dir>/custom_components/coach_stt/` containing
@@ -53,7 +53,7 @@ findings F4, F5, F7 for the source references.
 
    | Field | Value |
    |---|---|
-   | Host | `192.168.1.37` (default) |
+   | Host | `<AI_HOST_IP>` (the box running wyoming-faster-whisper) |
    | Port | `10300` (default) |
    | Maximum turn duration | `120` seconds (default, 10-600 allowed) |
 
@@ -111,7 +111,7 @@ automatically.
 ## Rollback
 
 Set the "Coach FR" pipeline's Speech-to-text engine back to the built-in Wyoming
-entity (the one created by the `wyoming` integration for `192.168.1.37:10300`)
+entity (the one created by the `wyoming` integration for `<AI_HOST_IP>:10300`)
 and save. That single change restores the previous behaviour, including the
 silence-based end of turn; the custom integration can stay installed.
 
@@ -122,11 +122,13 @@ To remove it completely: delete the config entry (Settings > Devices & Services
 ## Tests
 
 Two suites, both run with the same command. Use absolute paths so there is no
-doubt about which interpreter and which rootdir are used:
+doubt about which interpreter and which rootdir are used (`$PROJECT_ROOT` is the
+checkout of this repository):
 
 ```bash
-cd /home/yang/wsl-home-yang/openclassrooms/project15/project/server/ha_custom_components
-/home/yang/wsl-home-yang/openclassrooms/project15/project/.venv/bin/python \
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+cd "$PROJECT_ROOT"/server/ha_custom_components
+"$PROJECT_ROOT"/.venv/bin/python \
     -m pytest tests/ -q
 ```
 

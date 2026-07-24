@@ -237,7 +237,7 @@ Proof the fork is the code being built, not the bundled component. ESPHome
 2026.5.3 prints NO "loading local component" line, so the evidence is:
 
 - `esphome config` dumps
-  `external_components: - source: {path: /home/yang/wsl-home-yang/openclassrooms/project15/project/firmware/esphome/components, type: local}`
+  `external_components: - source: {path: <REPO_ROOT>/firmware/esphome/components, type: local}`
   with `components: [voice_assistant]`, and accepts
   `- voice_assistant.finish: {}` — an action that does not exist in ESPHome
   2026.5.3, so acceptance alone proves the override took effect.

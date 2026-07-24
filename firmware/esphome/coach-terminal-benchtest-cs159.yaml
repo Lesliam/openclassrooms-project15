@@ -88,7 +88,7 @@ wifi:
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
-      bssid: 3A:07:16:8B:5F:74
+      bssid: !secret wifi_bssid
   fast_connect: true
   power_save_mode: none
   ap:

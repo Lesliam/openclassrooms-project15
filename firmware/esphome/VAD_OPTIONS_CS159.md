@@ -17,11 +17,11 @@ Sources actually read in this investigation:
 | ESPHome generated API structs | 2026.5.3 | `esphome/components/api/api_pb2.h` |
 | `aioesphomeapi` | local 45.3.1, and v45.6.1 (the version pinned by HA `esphome/manifest.json`) | local install + `raw.githubusercontent.com/esphome/aioesphomeapi/v45.6.1` |
 | Home Assistant core | tag `2026.7.3` (latest release per GitHub releases API) and `dev` | `raw.githubusercontent.com/home-assistant/core/2026.7.3/...` |
-| `wyoming-faster-whisper` | 3.1.0 (with `faster-whisper` 1.2.1) | local venv `/home/yang/wsl-home-yang/voice-services/.venv/.../wyoming_faster_whisper/` |
+| `wyoming-faster-whisper` | 3.1.0 (with `faster-whisper` 1.2.1) | local venv `<VOICE_VENV>/.../wyoming_faster_whisper/` |
 | ESPHome documentation | current | `https://esphome.io/components/voice_assistant/`, `https://esphome.io/components/external_components/` |
 
 Caveat that must be closed before implementing: **the HA core version running on
-the Synology NAS is unknown.** `http://192.168.1.100:8123/api/` returns 401 and
+the Synology NAS is unknown.** `http://<NAS_IP>:8123/api/` returns 401 and
 no unauthenticated endpoint exposes the core version, so the version was not
 verified in this session. All HA line numbers below are from tag `2026.7.3`, and
 every claim was cross-checked against `dev` (identical). One recommendation below
@@ -371,7 +371,7 @@ Both blockers must be solved; most options solve only one.
 1. **O2 on the NAS** removes the server-side turn-ender through a supported,
    public property. One new custom integration, no core files touched, the
    "Coach FR" pipeline keeps its shape (Ollama agent, piper TTS, the same
-   wyoming-faster-whisper at 192.168.1.37:10300 — the new entity just speaks the
+   wyoming-faster-whisper at <AI_HOST_IP>:10300 — the new entity just speaks the
    wyoming protocol to it directly, and the `wyoming` python library is already a
    HA dependency). Both the 1.25 s silence cut and the 15 s cap disappear at once.
 2. **O5 in this repo** gives the end-word a way to finish the turn that actually

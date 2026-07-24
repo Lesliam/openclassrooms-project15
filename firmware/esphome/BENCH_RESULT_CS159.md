@@ -85,7 +85,7 @@ failed`, screen "Erreur". Root cause was environmental, NOT the firmware:
 
 Even on a turn that completed naturally (no mid-turn stop, e.g. ending 18:27:20.451):
 - `TTS stream start` → `TTS stream end` in ~12 ms (a real spoken reply is seconds).
-- `Response URL: http://192.168.1.100:8123/api/tts_proxy/...wav` delivered.
+- `Response URL: http://<NAS_IP>:8123/api/tts_proxy/...wav` delivered.
 - `Speaker has finished outputting all audio` immediately; `i2s_audio.speaker
   Starting` → `Stopped` in 0–11 ms; ring buffer created but no audio streamed.
 → The speaker output no audio; the learner heard nothing.

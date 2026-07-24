@@ -8,8 +8,11 @@ DOMAIN = "coach_stt"
 
 CONF_MAX_DURATION = "max_duration_seconds"
 
-# The GPU box running wyoming-faster-whisper (large-v3, French) on the LAN.
-DEFAULT_HOST = "192.168.1.37"
+# Pre-filled suggestion only: the config flow asks for the host of the box
+# running wyoming-faster-whisper (large-v3, French) on the LAN, and the value
+# entered there is what the entity uses. The real LAN address is deliberately
+# not hardcoded here (this repo has a public mirror).
+DEFAULT_HOST = "homeassistant.local"
 DEFAULT_PORT = 10300
 
 # Backstop duration for a turn that the satellite never terminates.

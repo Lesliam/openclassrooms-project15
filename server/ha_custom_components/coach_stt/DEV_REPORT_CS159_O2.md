@@ -13,7 +13,7 @@ touched, no git command was run.
 | File | Lines | Role |
 |---|---|---|
 | `manifest.json` | 13 | domain `coach_stt`, `version` (mandatory for custom integrations), `config_flow: true`, `dependencies: ["stt"]`, `iot_class: local_push` |
-| `const.py` | 27 | defaults: host `192.168.1.37`, port `10300`, max duration 120 s (10-600), languages `fr` + `en`, entity name |
+| `const.py` | 27 | defaults: host `homeassistant.local` (a prefill suggestion; the real host is entered in the config flow), port `10300`, max duration 120 s (10-600), languages `fr` + `en`, entity name |
 | `__init__.py` | 84 | config entry setup: one `Describe` handshake, `ConfigEntryNotReady` if unreachable, typed `runtime_data`, forwards the `stt` platform |
 | `config_flow.py` | 109 | user step (host/port/max duration) validated by a `Describe`, plus an options flow (`OptionsFlowWithReload`) for the max duration |
 | `stt.py` | 124 | the HA entity — thin glue, the only behavioural difference with the built-in provider is `audio_processing` |
@@ -101,11 +101,13 @@ Two notes rather than problems:
 Environment: `project/.venv` (Python 3.14.6, pytest 9.1.1, `wyoming` 1.9.0, and
 since review round 1 also `homeassistant` 2026.7.3). Nothing was installed
 system-wide. Run both suites with absolute paths, so there is no ambiguity about
-which interpreter and which rootdir are used:
+which interpreter and which rootdir are used (`$PROJECT_ROOT` is the checkout of
+this repository):
 
 ```bash
-cd /home/yang/wsl-home-yang/openclassrooms/project15/project/server/ha_custom_components
-/home/yang/wsl-home-yang/openclassrooms/project15/project/.venv/bin/python \
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+cd "$PROJECT_ROOT"/server/ha_custom_components
+"$PROJECT_ROOT"/.venv/bin/python \
     -m pytest tests/ -v -p no:cacheprovider
 ```
 
@@ -176,7 +178,7 @@ transcribe_stream -> status=success text='' audio_s=1.0 truncated=False (0.02s)
 ```
 
 This confirms, against the actual `wyoming-faster-whisper` 3.1.0 at
-`192.168.1.37:10300`: the `Describe` path, the full
+`<AI_HOST_IP>:10300`: the `Describe` path, the full
 `Transcribe`/`AudioStart`/`AudioChunk`/`AudioStop`/`Transcript` round trip, the
 100-language advertisement, and that silence returns an empty transcript rather
 than an error.

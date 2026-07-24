@@ -85,14 +85,14 @@ logger:
 wifi:
   # Single network expressed as a networks: list so the BSSID can be pinned.
   # Lock association to the STRONG AP radio: this SSID is served by two BSSIDs
-  # (Freebox); on 2026-07-16 the device roamed to the WEAKER one (joined 22:22:80
-  # @ -62 dB over 8B:5F:74 @ -53 dB), which drove the Beacon-Timeout drops. Pinning
+  # (Freebox); on 2026-07-16 the device roamed to the WEAKER one (joined <BSSID-B>
+  # @ -62 dB over <BSSID-A> @ -53 dB), which drove the Beacon-Timeout drops. Pinning
   # the BSSID keeps it on the strong radio and stops the roam churn. If this AP is
   # ever powered off, comment the bssid line so it can associate to the other BSSID.
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
-      bssid: 3A:07:16:8B:5F:74
+      bssid: !secret wifi_bssid
   # The target AP (Freebox) broadcasts a HIDDEN SSID. Scan-based association
   # fails ("No networks found") and the device thrashes between reconnect
   # phases. fast_connect skips the scan and associates directly to the
@@ -101,12 +101,12 @@ wifi:
   fast_connect: true
   power_save_mode: none
   # Optional: pin a static IP to skip DHCP renegotiation on every reconnect. The
-  # device took 192.168.1.75 via DHCP. To use it, uncomment and CONFIRM the
+  # device took <DEVICE_IP> via DHCP. To use it, uncomment and CONFIRM the
   # gateway/subnet for your Freebox first -- a wrong gateway makes the device
   # unreachable (would then need a serial re-flash to recover):
   # manual_ip:
-  #   static_ip: 192.168.1.75
-  #   gateway: 192.168.1.254    # <-- CONFIRM: your Freebox LAN gateway IP
+  #   static_ip: <DEVICE_IP>
+  #   gateway: <GATEWAY_IP>    # <-- CONFIRM: your Freebox LAN gateway IP
   #   subnet: 255.255.255.0
   ap:
     ssid: "Coach-Terminal Fallback"
